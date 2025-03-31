@@ -34,11 +34,11 @@ public class MockWeatherService implements Function<MockWeatherService.Request, 
 	@Override
 	public Response apply(Request request) {
 		double temperature = 0;
-		if(request.location().contains("巴黎")) {
+		if(request.location().contains("Paris")) {
 			temperature = 15;
-		}else if(request.location().contains("东京")) {
+		}else if(request.location().contains("Tokyo")) {
 			temperature = 10;
-		}else if(request.location().contains("旧金山")) {
+		}else if(request.location().contains("San Francisco")) {
 			temperature = 30;
 		}
 		return new Response(request.location,temperature,15,20,2,53,45,Unit.C);
