@@ -15,7 +15,7 @@ public class DashScopeImageOptions implements ImageOptions {
     private String model;
 
     @JsonProperty("n")
-    private Integer n;
+    private Integer n = 1;
 
     @JsonProperty("negative_prompt")
     private String negativePrompt;
@@ -29,6 +29,7 @@ public class DashScopeImageOptions implements ImageOptions {
 
     private Integer seed;
 
+    @JsonProperty("width")
     private Integer width;
 
     @JsonProperty("height")

@@ -2,7 +2,10 @@ package org.springframework.ai.dashscope.api;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.springframework.ai.dashscope.DashScopeImageModel;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.ai.model.ApiKey;
 import org.springframework.ai.model.NoopApiKey;
 import org.springframework.ai.retry.RetryUtils;
@@ -17,7 +20,11 @@ import java.util.List;
 
 public class DashScopeImageApi {
 
+    private static final Logger logger = LoggerFactory.getLogger(DashScopeImageApi.class);
+
     private static final String DEFAULT_IMAGE_MODEL = ImageModel.WAN2_2_T2I_FLASH.getValue();
+
+    private ObjectMapper objectMapper = new ObjectMapper();
 
     private final RestClient restClient;
 
@@ -30,6 +37,7 @@ public class DashScopeImageApi {
         this.restClient = restClientBuilder.clone()
                 .baseUrl(baseUrl)
                 .defaultHeaders(h -> {
+                    h.add("X-DashScope-Async","enable");
                     h.setContentType(MediaType.APPLICATION_JSON);
                     h.addAll(HttpHeaders.readOnlyHttpHeaders(headers));
                 })
@@ -46,7 +54,13 @@ public class DashScopeImageApi {
         return this.restClient.get().uri("/api/v1/tasks/{taskId}",taskId).retrieve().toEntity(DashScopeImageResponse.class);
     }
 
-    public HttpEntity<DashScopeImageResponse> submitImageGenTask(ImageRequest imageRequest){
+    public HttpEntity<DashScopeImageResponse> submitImageGenTask(ImageRequest imageRequest) {
+        try {
+            String body = objectMapper.writeValueAsString(imageRequest);
+            logger.info(body);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
         return this.restClient.post().uri("/api/v1/services/aigc/text2image/image-synthesis").body(imageRequest).retrieve().toEntity(DashScopeImageResponse.class);
     }
 
@@ -68,8 +82,10 @@ public class DashScopeImageApi {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public record ImageRequest(String model,Input input,Parameters parameters){
 
+        @JsonInclude(JsonInclude.Include.NON_NULL)
         public record Input(String prompt,@JsonProperty("negative_prompt") String negativePrompt){}
 
+        @JsonInclude(JsonInclude.Include.NON_NULL)
         public record Parameters(
                 @JsonProperty("size") String size,
                 Integer n,
@@ -83,7 +99,13 @@ public class DashScopeImageApi {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public record DashScopeImageResponse(Output output,@JsonProperty("request_id") String requestId,String code,String message,Usage usage){
 
-        public record Output(String taskId, String taskStatus, List<Result> results,TaskMetrics taskMetrics,String code,String message){}
+        public record Output(
+                @JsonProperty("task_id") String taskId,
+                @JsonProperty("task_status") String taskStatus,
+                List<Result> results,
+                @JsonProperty("task_metrics") TaskMetrics taskMetrics,
+                String code,
+                String message){}
 
         public record Result(String url,String code,String message){}
 
