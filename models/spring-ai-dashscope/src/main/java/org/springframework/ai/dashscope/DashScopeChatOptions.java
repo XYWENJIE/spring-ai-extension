@@ -1,6 +1,5 @@
 package org.springframework.ai.dashscope;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -10,13 +9,11 @@ import java.util.Set;
 import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.dashscope.api.DashScopeApi;
 import org.springframework.ai.model.ModelOptionsUtils;
-import org.springframework.ai.model.function.FunctionCallback;
 import org.springframework.ai.model.tool.ToolCallingChatOptions;
-import org.springframework.util.Assert;
+import org.springframework.ai.tool.ToolCallback;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -29,9 +26,7 @@ public class DashScopeChatOptions implements ToolCallingChatOptions{
 	
 	@JsonIgnore
 	private Map<String,String> httpHeaders = new HashMap<>();
-	
-	@JsonIgnore
-	private List<FunctionCallback> toolCallbacks = new ArrayList<>();
+
 	
 	@JsonIgnore
 	private Set<String> toolNames = new HashSet<>();
@@ -43,29 +38,7 @@ public class DashScopeChatOptions implements ToolCallingChatOptions{
 		return new Builder();
 	}
 
-	@Override
-	public List<FunctionCallback> getFunctionCallbacks() {
-		// TODO Auto-generated method stub
-		return null;
-	}
 
-	@Override
-	public void setFunctionCallbacks(List<FunctionCallback> functionCallbacks) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public Set<String> getFunctions() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public void setFunctions(Set<String> functions) {
-		// TODO Auto-generated method stub
-		
-	}
 
 	@Override
 	@JsonIgnore
@@ -135,19 +108,16 @@ public class DashScopeChatOptions implements ToolCallingChatOptions{
 		return null;
 	}
 
-	@Override
-	@JsonIgnore
-	public List<FunctionCallback> getToolCallbacks() {
-		return this.toolCallbacks;
-	}
 
-	@Override
-	@JsonIgnore
-	public void setToolCallbacks(List<FunctionCallback> toolCallbacks) {
-		Assert.notNull(toolCallbacks, "toolCallbacks cannot be null");
-		Assert.noNullElements(toolCallbacks, "toolCallbacks cannot contain null elements");
-		this.toolCallbacks = toolCallbacks;
-	}
+    @Override
+    public List<ToolCallback> getToolCallbacks() {
+        return List.of();
+    }
+
+    @Override
+    public void setToolCallbacks(List<ToolCallback> toolCallbacks) {
+
+    }
 
 	@Override
 	@JsonIgnore
@@ -161,11 +131,10 @@ public class DashScopeChatOptions implements ToolCallingChatOptions{
 		
 	}
 
-	@Override
-	public Boolean isInternalToolExecutionEnabled() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public Boolean getInternalToolExecutionEnabled() {
+        return null;
+    }
 
 	@Override
 	public void setInternalToolExecutionEnabled(Boolean internalToolExecutionEnabled) {
@@ -193,8 +162,8 @@ public class DashScopeChatOptions implements ToolCallingChatOptions{
 			this.options = new DashScopeChatOptions();
 		}
 		
-		public Builder model(DashScopeApi.ChatModel chatModel) {
-			this.options.model = chatModel.getName();
+		public Builder model(String model) {
+			this.options.model = model;
 			return this;
 		}
 		
@@ -205,11 +174,6 @@ public class DashScopeChatOptions implements ToolCallingChatOptions{
 		
 		public Builder seed(Integer seed) {
 			this.options.parameters.setSeed(seed);
-			return this;
-		}
-		
-		public Builder toolCallbacks(List<FunctionCallback> toolCallbacks) {
-			this.options.setToolCallbacks(toolCallbacks);
 			return this;
 		}
 		

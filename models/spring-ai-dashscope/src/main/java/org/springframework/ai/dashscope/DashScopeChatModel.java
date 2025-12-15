@@ -25,6 +25,7 @@ import org.springframework.ai.chat.observation.ChatModelObservationConvention;
 import org.springframework.ai.chat.observation.ChatModelObservationDocumentation;
 import org.springframework.ai.chat.observation.DefaultChatModelObservationConvention;
 import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.content.Media;
 import org.springframework.ai.dashscope.api.DashScopeApi;
 import org.springframework.ai.dashscope.api.DashScopeApi.ChatCompletion;
 import org.springframework.ai.dashscope.api.DashScopeApi.ChatCompletionMessage;
@@ -34,13 +35,10 @@ import org.springframework.ai.dashscope.api.DashScopeApi.ChatCompletionMessage.R
 import org.springframework.ai.dashscope.api.DashScopeApi.ChatCompletionMessage.ToolCall;
 import org.springframework.ai.dashscope.api.DashScopeApi.ChatCompletionRequest;
 import org.springframework.ai.dashscope.api.DashScopeApi.Choice;
-import org.springframework.ai.dashscope.api.DashScopeApi.FunctionTool;
-import org.springframework.ai.model.Media;
 import org.springframework.ai.model.ModelOptionsUtils;
-import org.springframework.ai.model.tool.ToolCallingChatOptions;
-import org.springframework.ai.model.tool.ToolCallingManager;
-import org.springframework.ai.model.tool.ToolExecutionResult;
+import org.springframework.ai.model.tool.*;
 import org.springframework.ai.retry.RetryUtils;
+import org.springframework.ai.support.UsageCalculator;
 import org.springframework.ai.tool.definition.ToolDefinition;
 import org.springframework.http.ResponseEntity;
 import org.springframework.retry.support.RetryTemplate;
@@ -80,22 +78,26 @@ public class DashScopeChatModel implements ChatModel {
 
     private final ToolCallingManager toolCallingManager;
 
-    private ChatModelObservationConvention observationConvention = DEFAULT_OBSERVATION_CONVENTION;
+    private final ToolExecutionEligibilityPredicate toolExecutionEligibilityPredicate;
+
+    private final ChatModelObservationConvention observationConvention = DEFAULT_OBSERVATION_CONVENTION;
 
 
     public DashScopeChatModel(DashScopeApi dashScopeApi, DashScopeChatOptions defaultOptions,
                               ToolCallingManager toolCallingManager, RetryTemplate retryTemplate,
-                              ObservationRegistry observationRegistry) {
+                              ObservationRegistry observationRegistry, ToolExecutionEligibilityPredicate toolExecutionEligibilityPredicate) {
         Assert.notNull(dashScopeApi, "dashScopeApi cannot be null");
         Assert.notNull(defaultOptions, "defaultOptions cannot be null");
         Assert.notNull(toolCallingManager, "toolCallingManager cannot be null");
         Assert.notNull(retryTemplate, "retryTemplate cannot be null");
         Assert.notNull(observationRegistry, "observationRegistry cannot be null");
+        Assert.notNull(toolExecutionEligibilityPredicate, "toolExecutionEligibilityPredicate cannot be null");
         this.dashScopeApi = dashScopeApi;
         this.defaultOptions = defaultOptions;
         this.toolCallingManager = toolCallingManager;
         this.retryTemplate = retryTemplate;
         this.observationRegistry = observationRegistry;
+        this.toolExecutionEligibilityPredicate = toolExecutionEligibilityPredicate;
     }
 
     @Override
@@ -106,11 +108,10 @@ public class DashScopeChatModel implements ChatModel {
 
     public ChatResponse internalCall(Prompt prompt, ChatResponse previousChatResponse) {
         ChatCompletionRequest request = createRequest(prompt, Boolean.FALSE);
-        ChatModelObservationContext observationContext = ChatModelObservationContext.builder().prompt(prompt)
-                .provider("DashScope").requestOptions(prompt.getOptions()).build();
-        logger.info("Call请求：{}", ModelOptionsUtils.toJsonString(request));
-        //准备工具类
-        FunctionTool functionTool = new FunctionTool();
+        ChatModelObservationContext observationContext = ChatModelObservationContext.builder()
+                .prompt(prompt)
+                .provider("DashScope")
+                .build();
         ChatResponse response = ChatModelObservationDocumentation.CHAT_MODEL_OPERATION
                 .observation(this.observationConvention, DEFAULT_OBSERVATION_CONVENTION, () -> observationContext,
                         this.observationRegistry)
@@ -119,7 +120,7 @@ public class DashScopeChatModel implements ChatModel {
                             ctx -> this.dashScopeApi.chatCompletionEntity(request, getAdditionalHttpHeaders(prompt)));
                     var chatCompletion = completionEntity.getBody();
 
-                    logger.info("同步Call响应: {}", ModelOptionsUtils.toJsonString(chatCompletion));
+                    //logger.info("同步Call响应: {}", ModelOptionsUtils.toJsonString(chatCompletion));
                     if (chatCompletion == null) {
                         logger.warn("No chat completion returned for prompt: {}", prompt);
                         return new ChatResponse(List.of());
@@ -138,20 +139,26 @@ public class DashScopeChatModel implements ChatModel {
                         return buildGeneration(choice, metadata, request);
                     }).toList();
 
+                    //RateLimit rateLimit = OpenAiResponseHeaderExtractor.extractAiResponseHeaders(completionEntity);
+
+                    // Current usage
                     DashScopeApi.Usage usage = chatCompletion.usage();
                     Usage currentChatResponseUsage = usage != null ? getDefaultUsage(usage) : new EmptyUsage();
-                    Usage accumulatedUsage = UsageUtils.getCumulativeUsage(currentChatResponseUsage,
+                    Usage accumulatedUsage = UsageCalculator.getCumulativeUsage(currentChatResponseUsage,
                             previousChatResponse);
                     ChatResponse chatResponse = new ChatResponse(generations,
                             from(chatCompletion, null, accumulatedUsage));
                     observationContext.setResponse(chatResponse);
                     return chatResponse;
                 });
-        if (ToolCallingChatOptions.isInternalToolExecutionEnabled(prompt.getOptions()) && response != null
-                && response.hasToolCalls()) {
+
+        if (this.toolExecutionEligibilityPredicate.isToolExecutionRequired(prompt.getOptions(),response)) {
             var toolExecutionResult = this.toolCallingManager.executeToolCalls(prompt, response);
             if (toolExecutionResult.returnDirect()) {
-                return ChatResponse.builder().from(response).generations(ToolExecutionResult.buildGenerations(toolExecutionResult)).build();
+                return ChatResponse.builder()
+                        .from(response)
+                        .generations(ToolExecutionResult.buildGenerations(toolExecutionResult))
+                        .build();
             } else {
                 return this.internalCall(new Prompt(toolExecutionResult.conversationHistory(),prompt.getOptions()), response);
             }
@@ -169,14 +176,15 @@ public class DashScopeChatModel implements ChatModel {
         return Flux.deferContextual(contentView -> {
             ChatCompletionRequest request = createRequest(prompt, true);
             request.parameters().setIncrementalOutput(Boolean.TRUE);
-            logger.info("stream请求:{}", ModelOptionsUtils.toJsonString(request));
-            Flux<DashScopeApi.ChatCompletion> completion = this.dashScopeApi.chatCompletionStream(request,
+            Flux<DashScopeApi.ChatCompletion> completionChunks = this.dashScopeApi.chatCompletionStream(request,
                     getAdditionalHttpHeaders(prompt));
 
             ConcurrentHashMap<String, String> roleMap = new ConcurrentHashMap<>();
 
-            final ChatModelObservationContext observationContext = ChatModelObservationContext.builder().prompt(prompt)
-                    .provider("DashScope").requestOptions(prompt.getOptions()).build();
+            final ChatModelObservationContext observationContext = ChatModelObservationContext.builder()
+                    .prompt(prompt)
+                    .provider("DashScope")
+                    .build();
 
             Observation observation = ChatModelObservationDocumentation.CHAT_MODEL_OPERATION.observation(
                     this.observationConvention, DEFAULT_OBSERVATION_CONVENTION, () -> observationContext,
@@ -184,8 +192,7 @@ public class DashScopeChatModel implements ChatModel {
 
             observation.parentObservation(contentView.getOrDefault(ObservationThreadLocalAccessor.KEY,null)).start();
             Map<Integer,ToolCall> toolCallMap = new HashMap<>();
-            StringBuilder toolParbuild = new StringBuilder();
-            Flux<ChatResponse> chatResponse = completion.switchMap(chatCompletion -> Mono.just(chatCompletion).map(chatCompletion2 -> {
+            Flux<ChatResponse> chatResponse = completionChunks.switchMap(chatCompletion -> Mono.just(chatCompletion).map(chatCompletion2 -> {
                 logger.info("Flux响应内容：{}",ModelOptionsUtils.toJsonString(chatCompletion2));
                 try {
                     String id = chatCompletion2.requestId();
@@ -222,7 +229,7 @@ public class DashScopeChatModel implements ChatModel {
                     }).toList();
                     DashScopeApi.Usage usage = chatCompletion2.usage();
                     Usage currentChatResponseUsage = usage != null ? getDefaultUsage(usage) : new EmptyUsage();
-                    Usage accumulatedUsage = UsageUtils.getCumulativeUsage(currentChatResponseUsage,
+                    Usage accumulatedUsage = UsageCalculator.getCumulativeUsage(currentChatResponseUsage,
                             previousChatResponse);
                     return new ChatResponse(generations, from(chatCompletion2, null, accumulatedUsage));
                 } catch (Exception e) {
@@ -235,7 +242,7 @@ public class DashScopeChatModel implements ChatModel {
                 	ChatResponse secondResponse = bufferList.get(1);
                 	if(secondResponse != null && secondResponse.getMetadata() != null) {
                 		Usage usage = secondResponse.getMetadata().getUsage();
-                		if(!UsageUtils.isEmpty(usage)) {
+                		if(!UsageCalculator.isEmpty(usage)) {
                 			return new ChatResponse(firstResponse.getResults(),from(firstResponse.getMetadata(),usage));
                 		}
                 	}
@@ -289,9 +296,14 @@ public class DashScopeChatModel implements ChatModel {
         String finishReason = (choice.finishReason() != null ? choice.finishReason() : "");
         var generationMetadataBuilder = ChatGenerationMetadata.builder().finishReason(finishReason);
         List<Media> media = new ArrayList<>();
-        String textContent = choice.message().getContent();
+        String textContent;
+        if(choice.message().getContent() instanceof List<?> mediaContentList) {
 
-        var assistantMessage = new AssistantMessage(textContent,metadata,toolCalls,media);
+        	textContent = mediaContentList.stream().map(item -> ((MediaContent)item).getText()).collect(Collectors.joining("\n"));
+        }else{
+        	textContent = choice.message().getContent().toString();
+        }
+        var assistantMessage = AssistantMessage.builder().content(textContent).properties(metadata).toolCalls(toolCalls).media(media).build();
         return new Generation(assistantMessage,generationMetadataBuilder.build());
     }
 
@@ -346,7 +358,7 @@ public class DashScopeChatModel implements ChatModel {
                     this.defaultOptions.getToolContext()));
         } else {
             requestOptions.setHttpHeaders(this.defaultOptions.getHttpHeaders());
-            requestOptions.setInternalToolExecutionEnabled(this.defaultOptions.isInternalToolExecutionEnabled());
+            requestOptions.setInternalToolExecutionEnabled(this.defaultOptions.getInternalToolExecutionEnabled());
             requestOptions.setToolNames(this.defaultOptions.getToolNames());
             requestOptions.setToolCallbacks(this.defaultOptions.getToolCallbacks());
 
@@ -463,13 +475,15 @@ public class DashScopeChatModel implements ChatModel {
         private DashScopeApi dashScopeApi;
 
         private DashScopeChatOptions defaultOptions = DashScopeChatOptions.builder()
-                .model(DashScopeApi.DEFAULT_CAHT_MODEL).build();
+                .model(DashScopeApi.DEFAULT_CAHT_MODEL.getName()).build();
 
         private ToolCallingManager toolCallingManager;
 
         private RetryTemplate retryTemplate = RetryUtils.DEFAULT_RETRY_TEMPLATE;
 
         private ObservationRegistry observationRegistry = ObservationRegistry.NOOP;
+
+        private ToolExecutionEligibilityPredicate toolExecutionEligibilityPredicate = new DefaultToolExecutionEligibilityPredicate();
 
         public Builder dashScopeApi(DashScopeApi dashScopeApi) {
             this.dashScopeApi = dashScopeApi;
@@ -487,12 +501,12 @@ public class DashScopeChatModel implements ChatModel {
         }
 
         public DashScopeChatModel build() {
-            if (toolCallingManager != null) {
+            if (this.toolCallingManager != null) {
                 return new DashScopeChatModel(dashScopeApi, defaultOptions, toolCallingManager, retryTemplate,
-                        observationRegistry);
+                        observationRegistry,this.toolExecutionEligibilityPredicate);
             }
             return new DashScopeChatModel(dashScopeApi, defaultOptions, DEFAULT_TOOL_CALLING_MANAGER, retryTemplate,
-                    observationRegistry);
+                    observationRegistry,this.toolExecutionEligibilityPredicate);
 
         }
     }

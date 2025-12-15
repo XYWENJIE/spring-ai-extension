@@ -15,19 +15,16 @@
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.ai</groupId>
-			<artifactId>spring-ai-core</artifactId>
-			<version>${spring-ai.version}</version>
+			<artifactId>spring-ai-model</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.ai</groupId>
 			<artifactId>spring-ai-test</artifactId>
-			<version>${project.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.ai</groupId>
 			<artifactId>spring-ai-retry</artifactId>
-			<version>${spring-ai.version}</version>
 		</dependency>
 
 		<dependency>
@@ -54,5 +51,11 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-logging</artifactId>
 		</dependency>
-	</dependencies>
+        <dependency>
+            <groupId>org.xywenjie.spring-ai-extension</groupId>
+            <artifactId>spring-ai-model</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+    </dependencies>
 </project>

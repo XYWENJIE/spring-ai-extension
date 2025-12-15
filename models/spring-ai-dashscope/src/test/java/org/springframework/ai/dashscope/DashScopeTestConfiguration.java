@@ -2,6 +2,7 @@ package org.springframework.ai.dashscope;
 
 import org.springframework.ai.dashscope.api.DashScopeApi;
 import org.springframework.ai.dashscope.api.DashScopeApi.ChatModel;
+import org.springframework.ai.dashscope.api.DashScopeImageApi;
 import org.springframework.ai.model.ApiKey;
 import org.springframework.ai.model.SimpleApiKey;
 import org.springframework.context.annotation.Bean;
@@ -9,7 +10,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.boot.SpringBootConfiguration;
 
 @SpringBootConfiguration
-public class DashsCopeTestConfiguration {
+public class DashScopeTestConfiguration {
 	
 //	private String getApiKey() {
 //		String apiKey = System.getenv("DASHSCOPE_API_KEY");
@@ -49,6 +50,11 @@ public class DashsCopeTestConfiguration {
 	public DashScopeApi dashScopeApi() {
 		return DashScopeApi.builder().apiKey(getApiKey()).build();
 	}
+
+    @Bean
+    public DashScopeImageApi dashScopeImageApi(){
+        return DashScopeImageApi.builder().apiKey(getApiKey()).build();
+    }
 	
 	private ApiKey getApiKey() {
 		String apiKey = System.getenv("DASHSCOPE_API_KEY");
@@ -62,8 +68,13 @@ public class DashsCopeTestConfiguration {
 	public DashScopeChatModel dashScopeChatModel(DashScopeApi dashScopeApi) {
 		return DashScopeChatModel.builder()
 				.dashScopeApi(dashScopeApi)
-				.defaultOptions(DashScopeChatOptions.builder().model(ChatModel.QWEN_MAX).build())
+				.defaultOptions(DashScopeChatOptions.builder().model(ChatModel.QWEN_MAX.getName()).build())
 				.build();
 	}
+
+    @Bean
+    public DashScopeImageModel dashScopeImageModel(DashScopeImageApi imageApi){
+        return new DashScopeImageModel(imageApi);
+    }
 
 }

@@ -1,5 +1,7 @@
 package org.springframework.ai.dashscope.api;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -14,13 +16,10 @@ import org.springframework.ai.retry.RetryUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.Assert;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
+import org.springframework.util.*;
 import org.springframework.web.client.ResponseErrorHandler;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.reactive.function.client.WebClient;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -41,6 +40,8 @@ public class DashScopeApi {
 	public static final DashScopeApi.ChatModel DEFAULT_CAHT_MODEL = ChatModel.QWEN_PLUS;
 
 	private String completionsPath;
+	
+	private String multimodelPath = "/api/v1/services/aigc/multimodal-generation/generation";
 
 	private final RestClient restClient;
 
@@ -72,6 +73,9 @@ public class DashScopeApi {
 		Assert.notNull(chatRequest, "The request body can not be null.");
 		Assert.isTrue(!chatRequest.stream(), "Request must set the stream property to false.");
 		Assert.notNull(additionalHttpHeader, "The additional HTTP headers can not be null.");
+		if(chatRequest.model().contains("vl")) {
+			completionsPath = multimodelPath;
+		}
 		return this.restClient.post().uri(completionsPath).headers(headers -> headers.addAll(additionalHttpHeader))
 				.body(chatRequest).retrieve().toEntity(ChatCompletion.class);
 	}
@@ -227,30 +231,45 @@ public class DashScopeApi {
 			this.role = role;
 		}
 		
-		public ChatCompletionMessage(String content,Role role,List<ToolCall> toolCalls){
+		public ChatCompletionMessage(Object content,Role role,List<ToolCall> toolCalls){
 			this.rawContent = content;
 			this.role = role;
 			this.toolCalls = toolCalls;
 		}
 		
-		public ChatCompletionMessage(String content,Role role,String toolCallId){
+		public ChatCompletionMessage(Object content,Role role,String toolCallId){
 			this.rawContent = content;
 			this.role = role;
 			this.toolCallId = toolCallId;
 		}
 
-		public String getContent() {
+		public Object getContent() {
 			if (this.rawContent == null) {
 				return null;
 			}
 			if (this.rawContent instanceof String text) {
 				return text;
 			}
-			throw new IllegalStateException("The content is not a string!");
+			//throw new IllegalStateException("The content is not a string!");
+			return rawContent;
 		}
 
 		public void setContent(Object rawContent) {
-			this.rawContent = rawContent;
+			if(rawContent instanceof ArrayList<?> contentListValue) {
+				this.rawContent = contentListValue.stream().map(element -> {
+					LinkedHashMap<String, Object> map = (LinkedHashMap<String, Object>)element;
+					MediaContent mediaContent = new MediaContent();
+					if(!ObjectUtils.isEmpty(map.get("text"))){
+						mediaContent.setText(ObjectUtils.getDisplayString(map.get("text")));
+					}
+					if(!ObjectUtils.isEmpty(map.get("image"))){
+						mediaContent.setImage(ObjectUtils.getDisplayString(map.get("image")));
+					}
+					return mediaContent;
+				}).toList();
+			}else {
+				this.rawContent = rawContent;	
+			}
 		}
 
 		public Role getRole() {
@@ -295,12 +314,68 @@ public class DashScopeApi {
 			TOOL
 		}
 
-		public record MediaContent(@JsonProperty("text") String text, @JsonProperty("image") String image,
-				@JsonProperty("video") String[] videos, @JsonProperty("fps") Float fps,
-				@JsonProperty("audio") String audio) {
+		@JsonInclude(JsonInclude.Include.NON_NULL)
+		public static class MediaContent {
+			
+			private @JsonProperty("text") String text;
+			private @JsonProperty("image") String image;
+			private @JsonProperty("video") String[] videos;
+			private @JsonProperty("fps") Float fps;
+			private @JsonProperty("audio") String audio;
+			
+			public MediaContent() {
+			}
+			
+			public MediaContent(String text, String image, String[] videos, Float fps, String audio) {
+				this.text = text;
+				this.image = image;
+				this.videos = videos;
+				this.fps = fps;
+				this.audio = audio;
+			}
 
 			public MediaContent(String text) {
 				this(text, null, null, null, null);
+			}
+
+			public String getText() {
+				return text;
+			}
+
+			public void setText(String text) {
+				this.text = text;
+			}
+
+			public String getImage() {
+				return image;
+			}
+
+			public void setImage(String image) {
+				this.image = image;
+			}
+
+			public String[] getVideos() {
+				return videos;
+			}
+
+			public void setVideos(String[] videos) {
+				this.videos = videos;
+			}
+
+			public Float getFps() {
+				return fps;
+			}
+
+			public void setFps(Float fps) {
+				this.fps = fps;
+			}
+
+			public String getAudio() {
+				return audio;
+			}
+
+			public void setAudio(String audio) {
+				this.audio = audio;
 			}
 		}
 
@@ -478,6 +553,8 @@ public class DashScopeApi {
 		private MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
 
 		private String completionsPath = "/api/v1/services/aigc/text-generation/generation";
+		
+		private String multimodelPath = "/api/v1/services/aigc/multimodal-generation/generation";
 
 		private RestClient.Builder restClientBuilder = RestClient.builder();
 

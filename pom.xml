@@ -10,26 +10,18 @@
 	
 	<repositories>
 		<repository>
-			<id>spring-milestones</id>
-			<name>Spring Milestones</name>
-			<url>https://repo.spring.io/milestone</url>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-		</repository>
-		<repository>
-			<id>spring-snapshots</id>
-			<name>Spring Snapshots</name>
-			<url>https://repo.spring.io/snapshot</url>
-			<releases>
-				<enabled>false</enabled>
-			</releases>
-		</repository>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <id>spring-milestones</id>
+            <name>Spring Milestones</name>
+            <url>https://repo.spring.io/milestone</url>
+        </repository>
 	</repositories>
 
 	<properties>
-		<spring-ai.version>1.0.0-SNAPSHOT</spring-ai.version>
-		<spring-boot.version>3.2.4</spring-boot.version>
+		<spring-ai.version>1.1.2</spring-ai.version>
+		<spring-boot.version>3.5.8</spring-boot.version>
 	</properties>
 	
 	<build>
@@ -50,6 +42,7 @@
 	<modules>
 		<module>models/spring-ai-qianfan</module>
 		<module>models/spring-ai-dashscope</module>
+		<module>spring-ai-model</module>
         <module>spring-ai-spring-boot-autoconfigure</module>
     </modules>
 	
@@ -59,6 +52,13 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-dependencies</artifactId>
 				<version>${spring-boot.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.ai</groupId>
+				<artifactId>spring-ai-bom</artifactId>
+				<version>${spring-ai.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>

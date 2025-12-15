@@ -1,13 +1,7 @@
 package org.springframework.ai.autoconfigure.dashscope;
 
 import org.springframework.ai.autoconfigure.retry.SpringAiRetryAutoConfiguration;
-import org.springframework.ai.dashscope.DashsCopeService;
-import org.springframework.ai.dashscope.qwen.QWenChatModel;
-import org.springframework.ai.dashscope.qwen.QWenEmbeddingModel;
-import org.springframework.ai.dashscope.qwen.QWenImageModel;
-import org.springframework.ai.dashscope.qwen.api.QWenDashScopeService;
-import org.springframework.ai.model.function.FunctionCallback;
-import org.springframework.ai.model.function.FunctionCallbackContext;
+import org.springframework.ai.dashscope.DashScopeChatModel;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -31,8 +25,8 @@ public class DashscopeAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnProperty(prefix = DashscopeProperties.CONFIG_PREFIX,name="enabled",havingValue = "true",matchIfMissing = true)
-    public QWenChatModel QWenChatModel(DashscopeConnectionProperties commonProperties, DashscopeProperties dashscopeProperties, List<FunctionCallback> toolFunctionCallback,
-                                         FunctionCallbackContext functionCallbackContext, RetryTemplate retryTemplate){
+    public DashScopeChatModel dashScopeChatModel(DashscopeConnectionProperties commonProperties, DashscopeProperties dashscopeProperties, List<FunctionCallback> toolFunctionCallback,
+                                            FunctionCallbackContext functionCallbackContext, RetryTemplate retryTemplate){
         var dashsCopeService = qWenDashScopeService(dashscopeProperties.getApikey(),commonProperties.getApikey());
         if(!CollectionUtils.isEmpty(toolFunctionCallback)){
             dashscopeProperties.getOptions().getFunctionCallbacks().addAll(toolFunctionCallback);

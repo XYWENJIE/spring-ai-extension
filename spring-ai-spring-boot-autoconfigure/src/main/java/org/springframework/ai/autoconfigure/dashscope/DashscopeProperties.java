@@ -1,7 +1,7 @@
 package org.springframework.ai.autoconfigure.dashscope;
 
+import org.springframework.ai.dashscope.DashScopeChatOptions;
 import org.springframework.ai.dashscope.metadata.support.Model;
-import org.springframework.ai.dashscope.qwen.QWenChatOptions;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
 
@@ -17,16 +17,16 @@ public class DashscopeProperties extends DashscopeParentProperties {
     private boolean enabled = true;
 
     @NestedConfigurationProperty
-    private QWenChatOptions options = QWenChatOptions.builder()
-            .withModel(DEFAULT_CHAT_MODEL)
-            .withTemperature(DEFAULT_TEMPERATURE.floatValue())
+    private DashScopeChatOptions options = DashScopeChatOptions.builder()
+            .model(DEFAULT_CHAT_MODEL.getModelValue())
+            //.withTemperature(DEFAULT_TEMPERATURE.floatValue())
             .build();
 
-    public QWenChatOptions getOptions(){
+    public DashScopeChatOptions getOptions(){
         return options;
     }
 
-    public void setOptions(QWenChatOptions options){
+    public void setOptions(DashScopeChatOptions options){
         this.options = options;
     }
 

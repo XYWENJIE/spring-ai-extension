@@ -5,9 +5,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.StreamingChatModel;
 import org.springframework.ai.dashscope.DashScopeChatModel;
+import org.springframework.ai.image.ImageModel;
 import org.springframework.beans.factory.annotation.Autowired;
 
-public class AbstractIT {
+public abstract class AbstractIT {
 	
 	private static final Logger logger = LoggerFactory.getLogger(AbstractIT.class);
 	
@@ -19,5 +20,8 @@ public class AbstractIT {
 	
 	@Autowired
 	protected DashScopeChatModel dashScopeChatModel;
+
+    @Autowired
+    protected ImageModel imageModel;
 
 }

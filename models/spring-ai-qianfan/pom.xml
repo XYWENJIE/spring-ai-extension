@@ -15,8 +15,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.ai</groupId>
-			<artifactId>spring-ai-core</artifactId>
-			<version>${spring-ai.version}</version>
+			<artifactId>spring-ai-model</artifactId>
 		</dependency>
 
 		<dependency>
