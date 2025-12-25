@@ -12,6 +12,7 @@ import org.springframework.ai.model.ApiKey;
 import org.springframework.ai.model.ChatModelDescription;
 import org.springframework.ai.model.ModelOptionsUtils;
 import org.springframework.ai.model.NoopApiKey;
+import org.springframework.ai.model.SimpleApiKey;
 import org.springframework.ai.retry.RetryUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -27,6 +28,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+/**
+ * @author Huang Wenjie
+ */
 public class DashScopeApi {
 
 	private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -571,6 +575,12 @@ public class DashScopeApi {
 		public Builder apiKey(ApiKey apiKey) {
 			Assert.notNull(apiKey, "apiKey cannot be null");
 			this.apiKey = apiKey;
+			return this;
+		}
+		
+		public Builder apiKey(String apiKey) {
+			Assert.notNull(apiKey, "apiKey cannot be null");
+			this.apiKey = new SimpleApiKey(apiKey);
 			return this;
 		}
 

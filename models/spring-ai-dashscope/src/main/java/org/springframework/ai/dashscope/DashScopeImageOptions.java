@@ -23,10 +23,13 @@ public class DashScopeImageOptions implements ImageOptions {
     @JsonProperty("size")
     private String size;
 
+    @JsonProperty("prompt_extend")
     private Boolean promptExtend;
 
+    @JsonProperty("watermark")
     private Boolean watermark;
 
+    @JsonProperty("seed")
     private Integer seed;
 
     @JsonProperty("width")

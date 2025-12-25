@@ -6,8 +6,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.ai.dashscope.api.dto.DashScopeImageRequest;
 import org.springframework.ai.model.ApiKey;
 import org.springframework.ai.model.NoopApiKey;
+import org.springframework.ai.model.SimpleApiKey;
 import org.springframework.ai.retry.RetryUtils;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -18,6 +20,10 @@ import org.springframework.web.client.RestClient;
 
 import java.util.List;
 
+/**
+ * 图像生成API，新的2.6版本用普通DashScopeApi来实现，该类兼容以往的操作。
+ * @author Huang Wenjie
+ */
 public class DashScopeImageApi {
 
     private static final Logger logger = LoggerFactory.getLogger(DashScopeImageApi.class);
@@ -37,7 +43,6 @@ public class DashScopeImageApi {
         this.restClient = restClientBuilder.clone()
                 .baseUrl(baseUrl)
                 .defaultHeaders(h -> {
-                    h.add("X-DashScope-Async","enable");
                     h.setContentType(MediaType.APPLICATION_JSON);
                     h.addAll(HttpHeaders.readOnlyHttpHeaders(headers));
                 })
@@ -54,14 +59,25 @@ public class DashScopeImageApi {
         return this.restClient.get().uri("/api/v1/tasks/{taskId}",taskId).retrieve().toEntity(DashScopeImageResponse.class);
     }
 
-    public HttpEntity<DashScopeImageResponse> submitImageGenTask(ImageRequest imageRequest) {
+    /**
+     * 获取多模态生成结果的同步方法
+     * @return 多模态生成的响应结果
+     */
+    public HttpEntity<DashScopeImageResponse> getMultimodalGenerationResult(DashScopeImageRequest imageRequest){
+        return this.restClient.post().uri("/api/v1/services/aigc/multimodal-generation/generation")
+        		.body(imageRequest).retrieve().toEntity(DashScopeImageResponse.class);
+    }
+
+    public HttpEntity<DashScopeImageResponse> submitImageGenTask(DashScopeImageRequest imageRequest) {
+        Assert.isTrue(imageRequest.getModel().equals("wan2.6-t2i"), "当前模型"+imageRequest.getModel()+"该模型只能同步发送getMultimodalGenerationResult方法");
         try {
             String body = objectMapper.writeValueAsString(imageRequest);
             logger.info(body);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
-        return this.restClient.post().uri("/api/v1/services/aigc/text2image/image-synthesis").body(imageRequest).retrieve().toEntity(DashScopeImageResponse.class);
+        return this.restClient.post().uri("/api/v1/services/aigc/text2image/image-synthesis").header("X-DashScope-Async", "enable")
+        		.body(imageRequest).retrieve().toEntity(DashScopeImageResponse.class);
     }
 
     public enum ImageModel{
@@ -79,33 +95,20 @@ public class DashScopeImageApi {
         }
     }
 
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    public record ImageRequest(String model,Input input,Parameters parameters){
-
-        @JsonInclude(JsonInclude.Include.NON_NULL)
-        public record Input(String prompt,@JsonProperty("negative_prompt") String negativePrompt){}
-
-        @JsonInclude(JsonInclude.Include.NON_NULL)
-        public record Parameters(
-                @JsonProperty("size") String size,
-                Integer n,
-                @JsonProperty("prompt_extend") Boolean promptExtend,
-                @JsonProperty("watermark") Boolean watermark,
-                Integer seed){
-
-        }
-    }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    public record DashScopeImageResponse(Output output,@JsonProperty("request_id") String requestId,String code,String message,Usage usage){
+    public record DashScopeImageResponse(
+            @JsonProperty("output") Output output,
+            @JsonProperty("request_id") String requestId,
+            String code,String message,Usage usage){
 
         public record Output(
                 @JsonProperty("task_id") String taskId,
                 @JsonProperty("task_status") String taskStatus,
-                List<Result> results,
+                @JsonProperty("results") List<Result> results,
                 @JsonProperty("task_metrics") TaskMetrics taskMetrics,
-                String code,
-                String message){}
+                @JsonProperty("code") String code,
+                @JsonProperty("message") String message){}
 
         public record Result(String url,String code,String message){}
 
@@ -136,9 +139,16 @@ public class DashScopeImageApi {
             return this;
         }
 
+        public Builder apiKey(String apiKey){
+            Assert.notNull(apiKey,"apiKey cannot be null");
+            this.apiKey = new SimpleApiKey(apiKey);
+            return this;
+        }
+
         public DashScopeImageApi build(){
             Assert.notNull(this.apiKey,"apiKey cannot be null");
             return new DashScopeImageApi(this.baseUrl,this.apiKey,this.headers,this.restClientBuilder,responseErrorHandler);
         }
     }
 }
+
