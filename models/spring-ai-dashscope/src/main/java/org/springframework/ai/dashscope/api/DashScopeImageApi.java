@@ -63,13 +63,13 @@ public class DashScopeImageApi {
      * 获取多模态生成结果的同步方法
      * @return 多模态生成的响应结果
      */
-    public HttpEntity<DashScopeImageResponse> getMultimodalGenerationResult(DashScopeImageRequest imageRequest){
+    public HttpEntity<DashScopeImageResponse> getMultimodalGenerationResult(ImageRequest imageRequest){
         return this.restClient.post().uri("/api/v1/services/aigc/multimodal-generation/generation")
         		.body(imageRequest).retrieve().toEntity(DashScopeImageResponse.class);
     }
 
-    public HttpEntity<DashScopeImageResponse> submitImageGenTask(DashScopeImageRequest imageRequest) {
-        Assert.isTrue(imageRequest.getModel().equals("wan2.6-t2i"), "当前模型"+imageRequest.getModel()+"该模型只能同步发送getMultimodalGenerationResult方法");
+    public HttpEntity<DashScopeImageResponse> submitImageGenTask(ImageRequest imageRequest) {
+        Assert.isTrue(imageRequest.model().equals("wan2.6-t2i"), "当前模型"+imageRequest.model()+"该模型只能同步发送getMultimodalGenerationResult方法");
         try {
             String body = objectMapper.writeValueAsString(imageRequest);
             logger.info(body);
@@ -92,6 +92,23 @@ public class DashScopeImageApi {
 
         public String getValue() {
             return value;
+        }
+    }
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public record ImageRequest(String model,Input input,Parameters parameters){
+
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        public record Input(String prompt,@JsonProperty("negative_prompt") String negativePrompt){}
+
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        public record Parameters(
+                @JsonProperty("size") String size,
+                Integer n,
+                @JsonProperty("prompt_extend") Boolean promptExtend,
+                @JsonProperty("watermark") Boolean watermark,
+                Integer seed){
+
         }
     }
 
