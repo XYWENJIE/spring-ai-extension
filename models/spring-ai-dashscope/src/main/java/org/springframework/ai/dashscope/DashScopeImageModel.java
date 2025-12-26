@@ -17,13 +17,12 @@ import org.springframework.http.HttpEntity;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
-import org.xywenjie.spring.ai.externsion.image.AsyncImageModel;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-public class DashScopeImageModel implements AsyncImageModel {
+public class DashScopeImageModel implements ImageModel {
 
     private static final Logger logger = LoggerFactory.getLogger(DashScopeImageModel.class);
 
@@ -108,7 +107,6 @@ public class DashScopeImageModel implements AsyncImageModel {
         );
     }
 
-    @Override
     public String submitImageGenTask(ImagePrompt request) {
         DashScopeImageOptions imageOptions = toImageOptions(request.getOptions());
         logger.debug("Image options:{}",imageOptions);
@@ -146,7 +144,6 @@ public class DashScopeImageModel implements AsyncImageModel {
         return imageResponse.getBody();
     }
 
-    @Override
     public ImageResponse getImageGenTask(String taskId) {
         return toImageResponse(Objects.requireNonNull(getDashScopeImageGenTask(taskId)));
     }

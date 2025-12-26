@@ -46,7 +46,7 @@ mvn clean install
 </dependency>
 ~~~
 
-//TODO 未完成
+//TODO 未完成turbo
 可以在Spring Boot的文件application.properties中配置
 ~~~properties
 spring.ai.dashscope.api-key=你的api-key

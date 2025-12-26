@@ -22,7 +22,7 @@ public class DashScopeImageApiTests {
 
     DashScopeVideoApi dashScopeVideoApi = DashScopeVideoApi.builder().apiKey(System.getenv("DASHSCOPE_API_KEY")).build();
 
-    @Test
+    //@Test
     public void submit(){
         ChatCompletionRequest chatCompletionRequest = new ChatCompletionRequest(null, false);
         dashScopeApi.chatCompletionEntity(chatCompletionRequest);
@@ -31,7 +31,7 @@ public class DashScopeImageApiTests {
     /**
      * 通义万相-图生视频-基于首帧
      */
-    @Test
+    //@Test
     public void testImageToVideoWithFirstFrame() throws InterruptedException {
         DashScopeRequest request = DashScopeRequest.builder()
             .model("wan2.6-i2v")

@@ -1,7 +1,9 @@
 package org.springframework.ai.autoconfigure.dashscope;
 
-import org.springframework.ai.autoconfigure.retry.SpringAiRetryAutoConfiguration;
 import org.springframework.ai.dashscope.DashScopeChatModel;
+import org.springframework.ai.dashscope.DashScopeEmbeddingModel;
+import org.springframework.ai.dashscope.DashScopeImageModel;
+import org.springframework.ai.dashscope.api.DashScopeImageApi;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -17,8 +19,7 @@ import org.springframework.util.StringUtils;
 
 import java.util.List;
 
-@AutoConfiguration(after = {RestClientAutoConfiguration.class, SpringAiRetryAutoConfiguration.class})
-@ConditionalOnClass(DashsCopeService.class)
+@AutoConfiguration(after = {RestClientAutoConfiguration.class})
 @EnableConfigurationProperties({DashscopeProperties.class, QWenImageProperties.class,DashscopeConnectionProperties.class,DashscopeEmbeddingProperties.class})
 public class DashscopeAutoConfiguration {
 
@@ -31,43 +32,43 @@ public class DashscopeAutoConfiguration {
         if(!CollectionUtils.isEmpty(toolFunctionCallback)){
             dashscopeProperties.getOptions().getFunctionCallbacks().addAll(toolFunctionCallback);
         }
-        return new QWenChatModel(dashsCopeService,dashscopeProperties.getOptions(),functionCallbackContext,retryTemplate);
+        return new DashScopeChatModel(dashsCopeService,dashscopeProperties.getOptions(),functionCallbackContext,retryTemplate);
     }
 
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnProperty(prefix = DashscopeEmbeddingProperties.CONFIG_PREFIX,name = "enabled",havingValue = "true",
             matchIfMissing = true)
-    public QWenEmbeddingModel qWenEmbeddingClient(DashscopeConnectionProperties commonProperties, DashscopeProperties dashscopeProperties){
+    public DashScopeEmbeddingModel dashScopeEmbeddingClient(DashscopeConnectionProperties commonProperties, DashscopeProperties dashscopeProperties){
         var dashsCopeService = qWenDashScopeService(dashscopeProperties.getApikey(),commonProperties.getApikey());
-        //return new QWenEmbeddingModel(dashsCopeService);
+        //return new DashScopeEmbeddingModel(dashsCopeService);
         return null;
     }
 
 
-    private QWenDashScopeService qWenDashScopeService(String apikey, String commonApiKey){
-        String resolvedApiKey = StringUtils.hasText(apikey) ? apikey : commonApiKey;
-        Assert.hasText(resolvedApiKey,"Dashscope阿里云的AccessToken不存在");
-        return new QWenDashScopeService(resolvedApiKey);
-    }
+    // private QWenDashScopeService qWenDashScopeService(String apikey, String commonApiKey){
+    //     String resolvedApiKey = StringUtils.hasText(apikey) ? apikey : commonApiKey;
+    //     Assert.hasText(resolvedApiKey,"Dashscope阿里云的AccessToken不存在");
+    //     return new QWenDashScopeService(resolvedApiKey);
+    // }
 
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnProperty(prefix = QWenImageProperties.CONFIG_PREFIX,name = "enabled",havingValue = "true",
                         matchIfMissing = true)
-    public QWenImageModel qWenImageClient(DashscopeConnectionProperties commonProperties,QWenImageProperties qWenImageProperties){
+    public DashScopeImageModel qWenImageClient(DashscopeConnectionProperties commonProperties,QWenImageProperties qWenImageProperties){
         //var dashsCopeService = dashsCopeService(qWenImageProperties.getApikey(),commonProperties.getApikey());
         //return new QWenImageModel(dashsCopeService);
-        return null;
+        return new DashScopeImageModel(DashScopeImageApi.builder().build());
     }
 
     //TODO 未来1.0添加声音模型
 
-    @Bean
-    @ConditionalOnMissingBean
-    public FunctionCallbackContext springAiFunctionManager(ApplicationContext context){
-        FunctionCallbackContext manager = new FunctionCallbackContext();
-        manager.setApplicationContext(context);
-        return manager;
-    }
+    // @Bean
+    // @ConditionalOnMissingBean
+    // public FunctionCallbackContext springAiFunctionManager(ApplicationContext context){
+    //     FunctionCallbackContext manager = new FunctionCallbackContext();
+    //     manager.setApplicationContext(context);
+    //     return manager;
+    // }
 }

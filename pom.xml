@@ -42,7 +42,6 @@
 	<modules>
 		<module>models/spring-ai-qianfan</module>
 		<module>models/spring-ai-dashscope</module>
-		<module>spring-ai-model</module>
         <module>spring-ai-spring-boot-autoconfigure</module>
     </modules>
 	
@@ -64,6 +63,4 @@
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
-
-
 </project>

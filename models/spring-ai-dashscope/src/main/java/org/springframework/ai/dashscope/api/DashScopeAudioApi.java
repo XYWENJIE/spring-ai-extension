@@ -18,9 +18,7 @@ import org.springframework.web.reactive.socket.client.WebSocketClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.net.URI;
 import java.util.Map;
-import java.util.UUID;
 import java.util.function.Consumer;
 
 public class DashScopeAudioApi {
@@ -61,21 +59,6 @@ public class DashScopeAudioApi {
         webSocketClient = new ReactorNettyWebSocketClient();
     }
 
-//    private WebSocketClient chooseWebSocketClient(){
-//        try{
-//            Class.forName("");
-//            return new ReactorNettyWebSocketClient();
-//        }catch (ClassNotFoundException e){
-//            try{
-//                Class.forName("");
-//                return new StandardWebSocketClient();
-//            }catch (ClassNotFoundException ex){
-//                throw new IllegalArgumentException("");
-//            }
-//
-//        }
-//    }
-
     public ResponseEntity<SpeechResponse> createSpeech(SpeechRequest requestBody){
         Assert.isTrue(!requestBody.stream,"Non-streaming only for qwen3-tts-flash");
         Assert.isTrue(requestBody.model.equals("qwen3-tts-flash"),"Only qwen3-tts-flash supported here");
@@ -93,15 +76,6 @@ public class DashScopeAudioApi {
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve().bodyToFlux(SpeechResponse.class);
     }
-
-    // public Flux<String> streamCosyVoice() {
-    //     URI url = URI.create("wss://dashscope.aliyuncs.com/api-ws/v1/inference");
-    //     return webSocketClient.execute(url,session -> {
-    //         String taskId = UUID.randomUUID().toString();
-    //         //2.发送 run-task
-    //         String runTaskCmd = generateRunTaskCommand(taskId);
-    //     });
-    // }
 
     private String generateRunTaskCommand(String taskId){
         Map initMap = Map.of(
