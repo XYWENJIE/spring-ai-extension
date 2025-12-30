@@ -8,6 +8,8 @@ import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.ai.dashscope.api.dto.DashScopeRequest;
+import org.springframework.ai.dashscope.api.dto.DashScopeResponse;
 import org.springframework.ai.model.ApiKey;
 import org.springframework.ai.model.ChatModelDescription;
 import org.springframework.ai.model.ModelOptionsUtils;
@@ -42,18 +44,25 @@ public class DashScopeApi {
 	}
 
 	public static final DashScopeApi.ChatModel DEFAULT_CAHT_MODEL = ChatModel.QWEN_PLUS;
+	
+	public static final String DEFAULT_EMBEDDING_MODEL = "text-embedding-v4";
 
 	private String completionsPath;
 	
 	private String multimodelPath = "/api/v1/services/aigc/multimodal-generation/generation";
+	
+	private String embeddingsPath = "/api/v1/services/embeddings/text-embedding/text-embedding";
+	
+	private final ApiKey apiKey;
 
 	private final RestClient restClient;
 
 	private final WebClient webClient;
 
-	public DashScopeApi(String baseUrl, ApiKey apiKey, MultiValueMap<String, String> headers, String completionsPath,
+	public DashScopeApi(String baseUrl, ApiKey apiKey, HttpHeaders headers, String completionsPath,
 			RestClient.Builder restClientBuilder, WebClient.Builder webClientBuilder,
 			ResponseErrorHandler responseErrorHandler) {
+		this.apiKey = apiKey;
 		this.completionsPath = completionsPath;
 		Consumer<HttpHeaders> finalHeaders = h -> {
 			if (!(apiKey instanceof NoopApiKey)) {
@@ -69,11 +78,11 @@ public class DashScopeApi {
 	}
 
 	public ResponseEntity<ChatCompletion> chatCompletionEntity(ChatCompletionRequest chatRequest) {
-		return chatCompletionEntity(chatRequest, new LinkedMultiValueMap<>());
+		return chatCompletionEntity(chatRequest, new HttpHeaders());
 	}
 
 	public ResponseEntity<ChatCompletion> chatCompletionEntity(ChatCompletionRequest chatRequest,
-			MultiValueMap<String, String> additionalHttpHeader) {
+			HttpHeaders additionalHttpHeader) {
 		Assert.notNull(chatRequest, "The request body can not be null.");
 		Assert.isTrue(!chatRequest.stream(), "Request must set the stream property to false.");
 		Assert.notNull(additionalHttpHeader, "The additional HTTP headers can not be null.");
@@ -85,11 +94,11 @@ public class DashScopeApi {
 	}
 
 	public Flux<ChatCompletion> chatCompletionStream(ChatCompletionRequest chatRequest) {
-		return this.chatCompletionStream(chatRequest, new LinkedMultiValueMap<String, String>());
+		return this.chatCompletionStream(chatRequest, new HttpHeaders());
 	}
 
 	public Flux<ChatCompletion> chatCompletionStream(ChatCompletionRequest chatRequest,
-			MultiValueMap<String, String> additionalHttpHeader) {
+			HttpHeaders additionalHttpHeader) {
 		Assert.notNull(chatRequest, "The request body can not be null.");
 		Assert.isTrue(chatRequest.stream(), "Request must set the stream property to true.");
 		additionalHttpHeader.add("X-DashScope-SSE", "enable");
@@ -117,6 +126,25 @@ public class DashScopeApi {
 			return this.value;
 		}
 
+	}
+	
+	public ResponseEntity<DashScopeResponse> embeddings(DashScopeRequest request){
+		Assert.notNull(request, "");
+		
+		Assert.notNull(request.getInput(), "The input can not be null.");
+		
+		return this.restClient.post()
+				.uri(this.embeddingsPath)
+				.headers(this::addDefaultHeadersIfMissing)
+				.body(request)
+				.retrieve()
+				.toEntity(DashScopeResponse.class);
+	}
+	
+	private void addDefaultHeadersIfMissing(HttpHeaders headers) {
+		if(headers.get(HttpHeaders.AUTHORIZATION) == null && !(this.apiKey instanceof NoopApiKey)) {
+			headers.setBearerAuth(this.apiKey.getValue());
+		}
 	}
 
 	@JsonInclude(JsonInclude.Include.NON_NULL)
@@ -554,7 +582,7 @@ public class DashScopeApi {
 
 		private ApiKey apiKey;
 
-		private MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
+		private HttpHeaders headers = new HttpHeaders();
 
 		private String completionsPath = "/api/v1/services/aigc/text-generation/generation";
 		

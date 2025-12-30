@@ -24,7 +24,7 @@ public class DashScopeVideoApi {
 
     private final RestClient restClient;
 
-    public DashScopeVideoApi(String baseUrl, ApiKey apiKey, MultiValueMap<String,String> headers, RestClient.Builder restClientBuilder,ResponseErrorHandler responseErrorHandler) {
+    public DashScopeVideoApi(String baseUrl, ApiKey apiKey, HttpHeaders headers, RestClient.Builder restClientBuilder,ResponseErrorHandler responseErrorHandler) {
         Consumer<HttpHeaders> finalHeaders = h -> {
             if(!(apiKey instanceof  NoopApiKey)){
                 h.add(HttpHeaders.AUTHORIZATION,"Bearer "+ apiKey.getValue());
@@ -54,7 +54,7 @@ public class DashScopeVideoApi {
 
         private ApiKey apiKey;
 
-        private MultiValueMap<String,String> headers = new LinkedMultiValueMap<>();
+        private HttpHeaders headers = new HttpHeaders();
 
         private ResponseErrorHandler responseErrorHandler = RetryUtils.DEFAULT_RESPONSE_ERROR_HANDLER;
 

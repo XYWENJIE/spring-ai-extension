@@ -76,5 +76,10 @@ public class DashScopeTestConfiguration {
     public DashScopeImageModel dashScopeImageModel(DashScopeImageApi imageApi){
         return new DashScopeImageModel(imageApi);
     }
+    
+    @Bean
+    public DashScopeEmbeddingModel dashScopeEmbeddingModel(DashScopeApi api) {
+    	return new DashScopeEmbeddingModel(api);
+    }
 
 }

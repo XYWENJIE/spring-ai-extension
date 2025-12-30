@@ -1,8 +1,11 @@
 package org.springframework.ai.dashscope.api.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
@@ -33,6 +36,14 @@ public class DashScopeResponse {
 
 	public void setOutput(Output output) {
 		this.output = output;
+	}
+	
+	public Usage getUsage() {
+		return usage;
+	}
+	
+	public void setUsage(Usage usage) {
+		this.usage = usage;
 	}
 	
 	public String getRequestId() {
@@ -85,6 +96,9 @@ public class DashScopeResponse {
 
         @JsonProperty("video_url")
         private String videoUrl;
+        
+        @JsonProperty("embeddings")
+        private List<Embedding> embeddings;
 
 		public String getTaskId() {
 			return taskId;
@@ -146,6 +160,14 @@ public class DashScopeResponse {
         public void setVideoUrl(String videoUrl) {
             this.videoUrl = videoUrl;
         }
+        
+        public List<Embedding> getEmbeddings() {
+			return embeddings;
+		}
+        
+        public void setEmbeddings(List<Embedding> embeddings) {
+			this.embeddings = embeddings;
+		}
 
     }
 
@@ -166,6 +188,9 @@ public class DashScopeResponse {
 
         @JsonProperty("SR")
         private Integer sr;
+        
+        @JsonProperty("total_tokens")
+        private Integer totalTokens;
 
 		public Integer getDuration() {
 			return duration;
@@ -206,7 +231,80 @@ public class DashScopeResponse {
 		public void setSr(Integer sr) {
 			this.sr = sr;
 		}
+		
+		public Integer getTotalTokens() {
+			return totalTokens;
+		}
+		
+		public void setTotalTokens(Integer totalTokens) {
+			this.totalTokens = totalTokens;
+		}
         
-        
+    }
+    
+    @JsonInclude(Include.NON_NULL)
+    public static class Embedding{
+    	
+    	@JsonProperty("sparse_embedding")
+    	private List<SparseEmbedding> sparseEmbedding;
+    	
+    	@JsonProperty("embedding")
+    	private float[] embedding;
+    	
+    	@JsonProperty("text_index")
+    	private Integer textIndex;
+    	
+    	public float[] getEmbedding() {
+			return embedding;
+		}
+    	
+    	public void setEmbedding(float[] embedding) {
+			this.embedding = embedding;
+		}
+    	
+    	public Integer getTextIndex() {
+			return textIndex;
+		}
+    	
+    	public void setTextIndex(Integer textIndex) {
+			this.textIndex = textIndex;
+		}
+    }
+    
+    @JsonInclude(Include.NON_NULL)
+    public class SparseEmbedding{
+    	
+    	@JsonProperty("index")
+    	private Integer index;
+    	
+    	@JsonProperty("value")
+    	private Float value;
+    	
+    	@JsonProperty("token")
+    	private String token;
+
+		public Integer getIndex() {
+			return index;
+		}
+
+		public void setIndex(Integer index) {
+			this.index = index;
+		}
+
+		public Float getValue() {
+			return value;
+		}
+
+		public void setValue(Float value) {
+			this.value = value;
+		}
+
+		public String getToken() {
+			return token;
+		}
+
+		public void setToken(String token) {
+			this.token = token;
+		}
     }
 }

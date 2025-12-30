@@ -40,8 +40,9 @@ import org.springframework.ai.model.tool.*;
 import org.springframework.ai.retry.RetryUtils;
 import org.springframework.ai.support.UsageCalculator;
 import org.springframework.ai.tool.definition.ToolDefinition;
+import org.springframework.core.retry.RetryTemplate;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
-import org.springframework.retry.support.RetryTemplate;
 import org.springframework.util.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -116,8 +117,8 @@ public class DashScopeChatModel implements ChatModel {
                 .observation(this.observationConvention, DEFAULT_OBSERVATION_CONVENTION, () -> observationContext,
                         this.observationRegistry)
                 .observe(() -> {
-                    ResponseEntity<ChatCompletion> completionEntity = this.retryTemplate.execute(
-                            ctx -> this.dashScopeApi.chatCompletionEntity(request, getAdditionalHttpHeaders(prompt)));
+                    ResponseEntity<ChatCompletion> completionEntity = RetryUtils.execute(this.retryTemplate,
+                            () -> this.dashScopeApi.chatCompletionEntity(request, getAdditionalHttpHeaders(prompt)));
                     var chatCompletion = completionEntity.getBody();
 
                     //logger.info("同步Call响应: {}", ModelOptionsUtils.toJsonString(chatCompletion));
@@ -277,13 +278,14 @@ public class DashScopeChatModel implements ChatModel {
         });
     }
 
-    private MultiValueMap<String, String> getAdditionalHttpHeaders(Prompt prompt) {
+    private HttpHeaders getAdditionalHttpHeaders(Prompt prompt) {
         Map<String, String> headers = new HashMap<>(this.defaultOptions.getHttpHeaders());
         if (prompt.getOptions() != null && prompt.getOptions() instanceof DashScopeChatOptions chatOptions) {
             headers.putAll(chatOptions.getHttpHeaders());
         }
-        return CollectionUtils.toMultiValueMap(
-                headers.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> List.of(e.getValue()))));
+        HttpHeaders httpHeaders = new HttpHeaders();
+        headers.forEach((key,value) -> httpHeaders.set(key, value));
+        return httpHeaders;
     }
 
     private Generation buildGeneration(Choice choice, Map<String, Object> metadata, ChatCompletionRequest chatRequest) {

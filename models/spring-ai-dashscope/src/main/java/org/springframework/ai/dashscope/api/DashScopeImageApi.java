@@ -13,6 +13,7 @@ import org.springframework.ai.retry.RetryUtils;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.util.Assert;
 import org.springframework.web.client.ResponseErrorHandler;
 import org.springframework.web.client.RestClient;
@@ -54,7 +55,7 @@ public class DashScopeImageApi {
                 .build();
     }
 
-    public HttpEntity<DashScopeImageResponse> getImageGenTaskResult(String taskId){
+    public ResponseEntity<DashScopeImageResponse> getImageGenTaskResult(String taskId){
         return this.restClient.get().uri("/api/v1/tasks/{taskId}",taskId).retrieve().toEntity(DashScopeImageResponse.class);
     }
 

@@ -109,6 +109,9 @@ public class DashScopeRequest {
 
         @JsonProperty("audio_url")
         private String audioUrl;
+        
+        @JsonProperty("texts")
+        private List<String> texts;
 
         /**
          * Get the list of messages
@@ -253,6 +256,14 @@ public class DashScopeRequest {
         public void setAudioUrl(String audioUrl) {
             this.audioUrl = audioUrl;
         }
+        
+        public List<String> getTexts() {
+			return texts;
+		}
+        
+        public void setTexts(List<String> texts) {
+			this.texts = texts;
+		}
     }
 
     /**
@@ -653,6 +664,11 @@ public class DashScopeRequest {
              instance.getInput().getReferenceVideoUrl().add(referenceVideoUrl);
              return this;
          }
+        
+        public Builder texts(List<String> texts) {
+        	instance.getInput().setTexts(texts);
+        	return this;
+        }
 
         public DashScopeRequest build() {
             return instance;

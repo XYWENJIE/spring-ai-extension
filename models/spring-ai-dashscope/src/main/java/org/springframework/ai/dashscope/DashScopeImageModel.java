@@ -13,8 +13,9 @@ import org.springframework.ai.image.observation.ImageModelObservationDocumentati
 import org.springframework.ai.model.ModelOptionsUtils;
 import org.springframework.ai.retry.RetryUtils;
 import org.springframework.ai.retry.TransientAiException;
+import org.springframework.core.retry.RetryTemplate;
 import org.springframework.http.HttpEntity;
-import org.springframework.retry.support.RetryTemplate;
+import org.springframework.http.ResponseEntity;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
@@ -36,7 +37,9 @@ public class DashScopeImageModel implements ImageModel {
 
     private final ObservationRegistry observationRegistry;
 
-    private final ImageModelObservationConvention observationConvention = new DefaultImageModelObservationConvention();
+    private final ImageModelObservationConvention DEFAULT_OBSERVATION_CONVENTION = new DefaultImageModelObservationConvention();
+    
+    private ImageModelObservationConvention observationConvention = DEFAULT_OBSERVATION_CONVENTION;
 
     public DashScopeImageModel(DashScopeImageApi dashScopeImageApi){
         this(dashScopeImageApi,DashScopeImageOptions.builder().build(), RetryUtils.DEFAULT_RETRY_TEMPLATE);
@@ -71,40 +74,32 @@ public class DashScopeImageModel implements ImageModel {
                 .provider("Dash")
                 .build();
 
-        Observation observation = ImageModelObservationDocumentation.IMAGE_MODEL_OPERATION.observation(
-                observationConvention,
-                new DefaultImageModelObservationConvention(),
-                () -> observationContext,
-                this.observationRegistry);
+//        Observation observation = ImageModelObservationDocumentation.IMAGE_MODEL_OPERATION.observation(
+//                observationConvention,
+//                new DefaultImageModelObservationConvention(),
+//                () -> observationContext,
+//                this.observationRegistry);
 
-        return Objects.requireNonNull(
-                observation.observe(
-                        () ->
-                                retryTemplate.execute(
-                                        ctx -> {
-                                            observation.lowCardinalityKeyValue("retry.attempt", String.valueOf(ctx.getRetryCount()));
-                                            DashScopeImageApi.DashScopeImageResponse imageResponse = getDashScopeImageGenTask(taskId);
-                                            if (imageResponse != null) {
-                                                String status = imageResponse.output().taskStatus();
-                                                observation.lowCardinalityKeyValue("task.status",status);
-                                                switch (status){
-                                                    case "SUCCEEDED" ->{
-                                                        return toImageResponse(imageResponse);
-                                                    }
-                                                    case "FAILED","UNKNOWN" -> {
-                                                        return new ImageResponse(List.of(),toMetadata(imageResponse));
-                                                    }
-                                                }
-                                            }
-                                            throw new TransientAiException("Image generation still pending");
-                                        },
-                                        context -> {
-                                            observation.lowCardinalityKeyValue("timeout", "true");
-                                            return new ImageResponse(List.of(), toMetadataTimeout(taskId));
-                                        }
-                                )
-                )
-        );
+        return ImageModelObservationDocumentation.IMAGE_MODEL_OPERATION
+        		.observation(this.observationConvention,DEFAULT_OBSERVATION_CONVENTION,() -> observationContext,
+        				this.observationRegistry)
+        		.observe(() -> {
+        			ResponseEntity<DashScopeImageApi.DashScopeImageResponse> responseEntity = RetryUtils.execute(this.retryTemplate, () -> this.dashScopeImageApi.getImageGenTaskResult(taskId));
+        			if(responseEntity.getBody() != null) {
+        				DashScopeImageApi.DashScopeImageResponse response = responseEntity.getBody();
+        				String status = response.output().taskStatus();
+        				switch (status) {
+							case "SUCCEEDED" -> {
+								return toImageResponse(response);
+							}
+							case "FAILED","UNKNOWN" -> {
+								return new ImageResponse(List.of(),toMetadata(response));
+							}
+        				}
+						throw new TransientAiException("Image generation still pending");
+        			}
+        			return null;
+        		});
     }
 
     public String submitImageGenTask(ImagePrompt request) {
