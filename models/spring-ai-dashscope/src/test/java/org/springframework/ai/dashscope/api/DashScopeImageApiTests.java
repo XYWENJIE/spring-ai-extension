@@ -4,12 +4,15 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.ai.dashscope.api.DashScopeApi.ChatCompletionRequest;
-import org.springframework.ai.dashscope.api.dto.DashScopeRequest;
-import org.springframework.ai.dashscope.api.dto.DashScopeResponse;
-import org.springframework.ai.dashscope.api.dto.DashScopeRequest.Resolution;
-import org.springframework.ai.dashscope.api.dto.DashScopeRequest.ShotType;
 import org.springframework.http.HttpEntity;
+import org.xywenjie.spring.ai.dashscope.api.dto.DashScopeRequest;
+import org.xywenjie.spring.ai.dashscope.api.dto.DashScopeResponse;
+import org.xywenjie.spring.ai.dashscope.api.dto.DashScopeRequest.Resolution;
+import org.xywenjie.spring.ai.dashscope.api.dto.DashScopeRequest.ShotType;
+import org.xywnejie.spring.ai.dashscope.api.DashScopeApi;
+import org.xywnejie.spring.ai.dashscope.api.DashScopeImageApi;
+import org.xywnejie.spring.ai.dashscope.api.DashScopeVideoApi;
+import org.xywnejie.spring.ai.dashscope.api.DashScopeApi.ChatCompletionRequest;
 
 @EnabledIfEnvironmentVariable(named = "DASHSCOPE_API_KEY", matches = ".+")
 public class DashScopeImageApiTests {

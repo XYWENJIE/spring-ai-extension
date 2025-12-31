@@ -6,9 +6,6 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
-import org.springframework.ai.dashscope.DashScopeEmbeddingModel;
-import org.springframework.ai.dashscope.DashScopeEmbeddingOptions;
-import org.springframework.ai.dashscope.api.DashScopeApi;
 import org.springframework.ai.document.MetadataMode;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.embedding.EmbeddingRequest;
@@ -25,6 +22,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.retry.RetryPolicy;
 import org.springframework.core.retry.RetryTemplate;
+import org.xywnejie.spring.ai.dashscope.DashScopeEmbeddingModel;
+import org.xywnejie.spring.ai.dashscope.DashScopeEmbeddingOptions;
+import org.xywnejie.spring.ai.dashscope.api.DashScopeApi;
 
 import io.micrometer.observation.tck.TestObservationRegistry;
 import io.micrometer.observation.tck.TestObservationRegistryAssert;

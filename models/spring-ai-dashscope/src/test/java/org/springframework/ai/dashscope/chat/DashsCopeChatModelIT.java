@@ -29,9 +29,7 @@ import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.content.Media;
 import org.springframework.ai.converter.ListOutputConverter;
 import org.springframework.ai.converter.MapOutputConverter;
-import org.springframework.ai.dashscope.DashScopeChatOptions;
 import org.springframework.ai.dashscope.DashScopeTestConfiguration;
-import org.springframework.ai.dashscope.api.DashScopeApi.ChatModel;
 import org.springframework.ai.dashscope.api.tool.MockWeatherService;
 import org.springframework.ai.dashscope.testutils.AbstractIT;
 import org.springframework.ai.tool.function.FunctionToolCallback;
@@ -40,6 +38,9 @@ import org.springframework.core.convert.support.DefaultConversionService;
 
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.util.MimeTypeUtils;
+import org.xywnejie.spring.ai.dashscope.DashScopeChatOptions;
+import org.xywnejie.spring.ai.dashscope.api.DashScopeApi.ChatModel;
+
 import reactor.core.publisher.Flux;
 
 @SpringBootTest(classes = DashScopeTestConfiguration.class)

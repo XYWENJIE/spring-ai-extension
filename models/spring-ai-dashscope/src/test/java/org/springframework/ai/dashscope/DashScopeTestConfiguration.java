@@ -1,12 +1,16 @@
 package org.springframework.ai.dashscope;
 
-import org.springframework.ai.dashscope.api.DashScopeApi;
-import org.springframework.ai.dashscope.api.DashScopeApi.ChatModel;
-import org.springframework.ai.dashscope.api.DashScopeImageApi;
 import org.springframework.ai.model.ApiKey;
 import org.springframework.ai.model.SimpleApiKey;
 import org.springframework.context.annotation.Bean;
 import org.springframework.util.StringUtils;
+import org.xywnejie.spring.ai.dashscope.DashScopeChatModel;
+import org.xywnejie.spring.ai.dashscope.DashScopeChatOptions;
+import org.xywnejie.spring.ai.dashscope.DashScopeEmbeddingModel;
+import org.xywnejie.spring.ai.dashscope.DashScopeImageModel;
+import org.xywnejie.spring.ai.dashscope.api.DashScopeApi;
+import org.xywnejie.spring.ai.dashscope.api.DashScopeImageApi;
+import org.xywnejie.spring.ai.dashscope.api.DashScopeApi.ChatModel;
 import org.springframework.boot.SpringBootConfiguration;
 
 @SpringBootConfiguration

@@ -8,10 +8,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
-import org.springframework.ai.dashscope.DashScopeEmbeddingModel;
-import org.springframework.ai.dashscope.DashScopeEmbeddingOptions;
 import org.springframework.ai.dashscope.DashScopeTestConfiguration;
-import org.springframework.ai.dashscope.api.DashScopeApi;
 import org.springframework.ai.dashscope.testutils.AbstractIT;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.embedding.EmbeddingResponse;
@@ -20,6 +17,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.Resource;
+import org.xywnejie.spring.ai.dashscope.DashScopeEmbeddingModel;
+import org.xywnejie.spring.ai.dashscope.DashScopeEmbeddingOptions;
+import org.xywnejie.spring.ai.dashscope.api.DashScopeApi;
 
 @SpringBootTest(classes = DashScopeTestConfiguration.class)
 @EnabledIfEnvironmentVariable(named = "DASHSCOPE_API_KEY",matches = ".+")

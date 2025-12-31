@@ -1,9 +1,5 @@
 package org.springframework.ai.autoconfigure.dashscope;
 
-import org.springframework.ai.dashscope.DashScopeChatModel;
-import org.springframework.ai.dashscope.DashScopeEmbeddingModel;
-import org.springframework.ai.dashscope.DashScopeImageModel;
-import org.springframework.ai.dashscope.api.DashScopeImageApi;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -16,6 +12,10 @@ import org.springframework.retry.support.RetryTemplate;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
+import org.xywnejie.spring.ai.dashscope.DashScopeChatModel;
+import org.xywnejie.spring.ai.dashscope.DashScopeEmbeddingModel;
+import org.xywnejie.spring.ai.dashscope.DashScopeImageModel;
+import org.xywnejie.spring.ai.dashscope.api.DashScopeImageApi;
 
 import java.util.List;
 

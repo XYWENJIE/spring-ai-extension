@@ -11,6 +11,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.assertj.core.api.Assertions;
+
 @SpringBootTest(classes = DashScopeTestConfiguration.class)
 @EnabledIfEnvironmentVariable(named = "DASHSCOPE_API_KEY", matches = ".+")
 public class DashScopeImageIT extends AbstractIT {
@@ -31,5 +33,10 @@ public class DashScopeImageIT extends AbstractIT {
         var generation = imageResponse.getResult();
         Image image = generation.getOutput();
         logger.info(image.getUrl());
+        assertThat(image.getUrl()).isNotEmpty();
+        assertThat(image.getB64Json()).isNull();
+        
+        var imageGenerationMetadata = generation.getMetadata();
+        //Assertions.assertThat(imageGenerationMetadata).isInstanceOf(DashScopeImage)
     }
 }

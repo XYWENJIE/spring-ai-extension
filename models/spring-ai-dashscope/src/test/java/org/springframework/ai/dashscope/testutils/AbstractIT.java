@@ -4,9 +4,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.StreamingChatModel;
-import org.springframework.ai.dashscope.DashScopeChatModel;
 import org.springframework.ai.image.ImageModel;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.xywnejie.spring.ai.dashscope.DashScopeChatModel;
 
 public abstract class AbstractIT {
 	
