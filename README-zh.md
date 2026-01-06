@@ -6,7 +6,7 @@
 
 **警告**
 
-本人在公司用的是0.7版本，由于Spring AI框架还在探索开发中，经常会出现破坏性更新，所以使用最新版本快照请酌情考虑。
+由于Spring AI框架正在快速迭代开发中，可能会出现破坏性更新。建议在生产环境使用稳定版本，使用SNAPSHOT版本请谨慎评估。
 
 ##功能特性##
 
@@ -23,7 +23,7 @@
 通过Git下载到本地
 ~~~ bash
 
-git clone https://github.com/XYWENJIE/spring-ai-dashscope.git
+git clone https://github.com/XYWENJIE/spring-ai-extension.git
 
 ~~~
 
@@ -34,7 +34,7 @@ cd spring-ai-extension
 mvn clean install
 ~~~
 
-这将并以项目并安装本地Maven仓库
+这将编译项目并安装到本地Maven仓库
 
 引入依赖
 在你的Spring项目中添加依赖，在Maven文件pom.xml添加模型，这里以阿里云的模型服务产品“灵积”为例:
@@ -46,17 +46,16 @@ mvn clean install
 </dependency>
 ~~~
 
-//TODO 未完成turbo
 可以在Spring Boot的文件application.properties中配置
 ~~~properties
 spring.ai.dashscope.api-key=你的api-key
 ~~~
 
-#### 联系
+#### 联系方式
 
 有任何疑问可以提交issue或邮箱联系:xywenjie@outlook.com
 
-#### 未来发展
+#### 未来规划
 本人单位用阿里云，优先阿里云的灵积服务，未来会添加智谱AI、百度的千帆和腾讯云混元大模型等功能
 
-公司内部智谱AI实现已经移除了，官方Spring AI已经支持了，这边就不在考虑范围！
+智谱AI实现已移除，因为官方Spring AI已支持该模型，本项目不再重复实现。
