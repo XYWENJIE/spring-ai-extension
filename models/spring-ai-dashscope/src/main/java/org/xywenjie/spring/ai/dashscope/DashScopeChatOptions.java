@@ -1,4 +1,4 @@
-package org.xywnejie.spring.ai.dashscope;
+package org.xywenjie.spring.ai.dashscope;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -10,7 +10,7 @@ import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.model.ModelOptionsUtils;
 import org.springframework.ai.model.tool.ToolCallingChatOptions;
 import org.springframework.ai.tool.ToolCallback;
-import org.xywnejie.spring.ai.dashscope.api.DashScopeApi;
+import org.xywenjie.spring.ai.dashscope.api.DashScopeApi;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;

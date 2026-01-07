@@ -38,8 +38,8 @@ import org.springframework.core.convert.support.DefaultConversionService;
 
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.util.MimeTypeUtils;
-import org.xywnejie.spring.ai.dashscope.DashScopeChatOptions;
-import org.xywnejie.spring.ai.dashscope.api.DashScopeApi.ChatModel;
+import org.xywenjie.spring.ai.dashscope.DashScopeChatOptions;
+import org.xywenjie.spring.ai.dashscope.api.DashScopeApi.ChatModel;
 
 import reactor.core.publisher.Flux;
 

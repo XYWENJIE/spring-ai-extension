@@ -97,6 +97,9 @@ public class DashScopeResponse {
         @JsonProperty("video_url")
         private String videoUrl;
         
+        @JsonProperty("audio")
+        private Audio audio;
+        
         @JsonProperty("embeddings")
         private List<Embedding> embeddings;
 
@@ -161,7 +164,15 @@ public class DashScopeResponse {
             this.videoUrl = videoUrl;
         }
         
-        public List<Embedding> getEmbeddings() {
+        public Audio getAudio() {
+			return audio;
+		}
+
+		public void setAudio(Audio audio) {
+			this.audio = audio;
+		}
+
+		public List<Embedding> getEmbeddings() {
 			return embeddings;
 		}
         
@@ -306,5 +317,55 @@ public class DashScopeResponse {
 		public void setToken(String token) {
 			this.token = token;
 		}
+    }
+    
+    @JsonInclude(Include.NON_NULL)
+    public class Audio{
+    	
+    	@JsonProperty("URL")
+    	private String url;
+    	
+    	@JsonProperty("data")
+    	private String data;
+    	
+    	@JsonProperty("id")
+    	private String id;
+    	
+    	@JsonProperty("expires_at")
+    	private Integer expiresAt;
+
+		public String getUrl() {
+			return url;
+		}
+
+		public void setUrl(String url) {
+			this.url = url;
+		}
+
+		public String getData() {
+			return data;
+		}
+
+		public void setData(String data) {
+			this.data = data;
+		}
+
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public Integer getExpiresAt() {
+			return expiresAt;
+		}
+
+		public void setExpiresAt(Integer expiresAt) {
+			this.expiresAt = expiresAt;
+		}
+    	
+    	
     }
 }

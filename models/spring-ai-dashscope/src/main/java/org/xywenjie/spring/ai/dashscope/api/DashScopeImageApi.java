@@ -1,4 +1,4 @@
-package org.xywnejie.spring.ai.dashscope.api;
+package org.xywenjie.spring.ai.dashscope.api;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;

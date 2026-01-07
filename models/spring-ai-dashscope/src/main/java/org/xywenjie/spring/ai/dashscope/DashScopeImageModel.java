@@ -1,4 +1,4 @@
-package org.xywnejie.spring.ai.dashscope;
+package org.xywenjie.spring.ai.dashscope;
 
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationRegistry;
@@ -17,7 +17,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
-import org.xywnejie.spring.ai.dashscope.api.DashScopeImageApi;
+import org.xywenjie.spring.ai.dashscope.api.DashScopeImageApi;
 
 import java.util.List;
 import java.util.Objects;

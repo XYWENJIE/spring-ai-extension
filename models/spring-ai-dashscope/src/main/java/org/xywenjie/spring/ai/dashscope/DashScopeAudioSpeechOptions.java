@@ -1,8 +1,19 @@
-package org.xywnejie.spring.ai.dashscope;
+package org.xywenjie.spring.ai.dashscope;
 
 import org.springframework.ai.audio.tts.TextToSpeechOptions;
 
 public class DashScopeAudioSpeechOptions implements TextToSpeechOptions {
+
+    private String text;
+
+    public String getText() {
+        return text;
+    }
+
+    public void setText(String text) {
+        this.text = text;
+    }
+
     @Override
     public String getModel() {
         return "";

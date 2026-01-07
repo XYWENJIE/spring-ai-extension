@@ -1,4 +1,4 @@
-package org.xywnejie.spring.ai.dashscope;
+package org.xywenjie.spring.ai.dashscope;
 
 import java.util.List;
 
@@ -23,9 +23,9 @@ import org.springframework.ai.model.ModelOptionsUtils;
 import org.springframework.ai.retry.RetryUtils;
 import org.springframework.core.retry.RetryTemplate;
 import org.springframework.util.Assert;
+import org.xywenjie.spring.ai.dashscope.api.DashScopeApi;
 import org.xywenjie.spring.ai.dashscope.api.dto.DashScopeRequest;
 import org.xywenjie.spring.ai.dashscope.api.dto.DashScopeResponse;
-import org.xywnejie.spring.ai.dashscope.api.DashScopeApi;
 
 import io.micrometer.observation.ObservationRegistry;
 

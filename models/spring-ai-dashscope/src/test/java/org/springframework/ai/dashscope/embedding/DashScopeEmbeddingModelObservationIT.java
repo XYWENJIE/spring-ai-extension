@@ -22,9 +22,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.retry.RetryPolicy;
 import org.springframework.core.retry.RetryTemplate;
-import org.xywnejie.spring.ai.dashscope.DashScopeEmbeddingModel;
-import org.xywnejie.spring.ai.dashscope.DashScopeEmbeddingOptions;
-import org.xywnejie.spring.ai.dashscope.api.DashScopeApi;
+import org.xywenjie.spring.ai.dashscope.DashScopeEmbeddingModel;
+import org.xywenjie.spring.ai.dashscope.DashScopeEmbeddingOptions;
+import org.xywenjie.spring.ai.dashscope.api.DashScopeApi;
 
 import io.micrometer.observation.tck.TestObservationRegistry;
 import io.micrometer.observation.tck.TestObservationRegistryAssert;

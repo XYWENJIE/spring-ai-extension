@@ -6,7 +6,8 @@ import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.StreamingChatModel;
 import org.springframework.ai.image.ImageModel;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.xywnejie.spring.ai.dashscope.DashScopeChatModel;
+import org.xywenjie.spring.ai.dashscope.DashScopeAudioSpeechModel;
+import org.xywenjie.spring.ai.dashscope.DashScopeChatModel;
 
 public abstract class AbstractIT {
 	
@@ -23,5 +24,8 @@ public abstract class AbstractIT {
 
     @Autowired
     protected ImageModel imageModel;
+    
+    @Autowired
+    protected DashScopeAudioSpeechModel speechModel;
 
 }

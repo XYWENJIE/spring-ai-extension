@@ -1,4 +1,4 @@
-package org.xywnejie.spring.ai.dashscope.api;
+package org.xywenjie.spring.ai.dashscope.api;
 
 import java.util.function.Consumer;
 

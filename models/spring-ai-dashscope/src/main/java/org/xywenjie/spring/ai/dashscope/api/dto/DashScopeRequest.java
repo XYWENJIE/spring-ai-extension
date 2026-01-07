@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * DashScope request class for handling requests to the DashScope API.
  * This class contains model, input, and parameters for the request.
  * 
- * @author Huang Wenjie
+ * @author Huang Wenjie(黄文杰)
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class DashScopeRequest {
@@ -38,6 +38,7 @@ public class DashScopeRequest {
     public void setModel(String model) {
         this.model = model;
     }
+    
 
     /**
      * Get the input for this request
@@ -82,6 +83,15 @@ public class DashScopeRequest {
      * Input class containing the input parameters for the request
      */
     public class Input{
+    	
+    	@JsonProperty("text")
+    	private String text;
+    	
+    	@JsonProperty("voice")
+    	private String voice;
+    	
+    	@JsonProperty("language_type")
+    	private String languageType;
 
         @JsonProperty("messages")
         private List<Message> messages;
@@ -112,8 +122,34 @@ public class DashScopeRequest {
         
         @JsonProperty("texts")
         private List<String> texts;
+        
+        
 
-        /**
+        public String getText() {
+			return text;
+		}
+
+		public void setText(String text) {
+			this.text = text;
+		}
+
+		public String getVoice() {
+			return voice;
+		}
+
+		public void setVoice(String voice) {
+			this.voice = voice;
+		}
+
+		public String getLanguageType() {
+			return languageType;
+		}
+
+		public void setLanguageType(String languageType) {
+			this.languageType = languageType;
+		}
+
+		/**
          * Get the list of messages
          * @return List of Message objects
          */
@@ -568,6 +604,16 @@ public class DashScopeRequest {
         public Builder model(String model) {
             instance.setModel(model);
             return this;
+        }
+        
+        public Builder text(String text) {
+        	instance.getInput().setText(text);
+        	return this;
+        }
+        
+        public Builder voice(String voice) {
+        	instance.getInput().setVoice(voice);
+        	return this;
         }
 
         public Builder prompt(String prompt){

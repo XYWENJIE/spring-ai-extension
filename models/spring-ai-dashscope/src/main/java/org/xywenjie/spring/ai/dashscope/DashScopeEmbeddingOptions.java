@@ -1,4 +1,4 @@
-package org.xywnejie.spring.ai.dashscope;
+package org.xywenjie.spring.ai.dashscope;
 
 import org.springframework.ai.embedding.EmbeddingOptions;
 

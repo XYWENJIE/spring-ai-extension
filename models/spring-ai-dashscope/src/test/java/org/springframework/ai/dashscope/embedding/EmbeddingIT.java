@@ -17,9 +17,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.Resource;
-import org.xywnejie.spring.ai.dashscope.DashScopeEmbeddingModel;
-import org.xywnejie.spring.ai.dashscope.DashScopeEmbeddingOptions;
-import org.xywnejie.spring.ai.dashscope.api.DashScopeApi;
+import org.xywenjie.spring.ai.dashscope.DashScopeEmbeddingModel;
+import org.xywenjie.spring.ai.dashscope.DashScopeEmbeddingOptions;
+import org.xywenjie.spring.ai.dashscope.api.DashScopeApi;
 
 @SpringBootTest(classes = DashScopeTestConfiguration.class)
 @EnabledIfEnvironmentVariable(named = "DASHSCOPE_API_KEY",matches = ".+")

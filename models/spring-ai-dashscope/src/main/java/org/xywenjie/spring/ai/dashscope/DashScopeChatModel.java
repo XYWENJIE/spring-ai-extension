@@ -1,4 +1,4 @@
-package org.xywnejie.spring.ai.dashscope;
+package org.xywenjie.spring.ai.dashscope;
 
 import java.util.ArrayList;
 import java.util.Base64;
@@ -35,15 +35,15 @@ import org.springframework.core.retry.RetryTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.*;
-import org.xywnejie.spring.ai.dashscope.api.DashScopeApi;
-import org.xywnejie.spring.ai.dashscope.api.DashScopeApi.ChatCompletion;
-import org.xywnejie.spring.ai.dashscope.api.DashScopeApi.ChatCompletionMessage;
-import org.xywnejie.spring.ai.dashscope.api.DashScopeApi.ChatCompletionRequest;
-import org.xywnejie.spring.ai.dashscope.api.DashScopeApi.Choice;
-import org.xywnejie.spring.ai.dashscope.api.DashScopeApi.ChatCompletionMessage.ChatCompletionFunction;
-import org.xywnejie.spring.ai.dashscope.api.DashScopeApi.ChatCompletionMessage.MediaContent;
-import org.xywnejie.spring.ai.dashscope.api.DashScopeApi.ChatCompletionMessage.Role;
-import org.xywnejie.spring.ai.dashscope.api.DashScopeApi.ChatCompletionMessage.ToolCall;
+import org.xywenjie.spring.ai.dashscope.api.DashScopeApi;
+import org.xywenjie.spring.ai.dashscope.api.DashScopeApi.ChatCompletion;
+import org.xywenjie.spring.ai.dashscope.api.DashScopeApi.ChatCompletionMessage;
+import org.xywenjie.spring.ai.dashscope.api.DashScopeApi.ChatCompletionRequest;
+import org.xywenjie.spring.ai.dashscope.api.DashScopeApi.Choice;
+import org.xywenjie.spring.ai.dashscope.api.DashScopeApi.ChatCompletionMessage.ChatCompletionFunction;
+import org.xywenjie.spring.ai.dashscope.api.DashScopeApi.ChatCompletionMessage.MediaContent;
+import org.xywenjie.spring.ai.dashscope.api.DashScopeApi.ChatCompletionMessage.Role;
+import org.xywenjie.spring.ai.dashscope.api.DashScopeApi.ChatCompletionMessage.ToolCall;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 

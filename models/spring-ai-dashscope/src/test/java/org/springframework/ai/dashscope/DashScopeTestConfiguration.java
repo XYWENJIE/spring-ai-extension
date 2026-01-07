@@ -1,16 +1,19 @@
 package org.springframework.ai.dashscope;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.ai.model.ApiKey;
 import org.springframework.ai.model.SimpleApiKey;
 import org.springframework.context.annotation.Bean;
 import org.springframework.util.StringUtils;
-import org.xywnejie.spring.ai.dashscope.DashScopeChatModel;
-import org.xywnejie.spring.ai.dashscope.DashScopeChatOptions;
-import org.xywnejie.spring.ai.dashscope.DashScopeEmbeddingModel;
-import org.xywnejie.spring.ai.dashscope.DashScopeImageModel;
-import org.xywnejie.spring.ai.dashscope.api.DashScopeApi;
-import org.xywnejie.spring.ai.dashscope.api.DashScopeImageApi;
-import org.xywnejie.spring.ai.dashscope.api.DashScopeApi.ChatModel;
+import org.xywenjie.spring.ai.dashscope.DashScopeAudioSpeechModel;
+import org.xywenjie.spring.ai.dashscope.DashScopeChatModel;
+import org.xywenjie.spring.ai.dashscope.DashScopeChatOptions;
+import org.xywenjie.spring.ai.dashscope.DashScopeEmbeddingModel;
+import org.xywenjie.spring.ai.dashscope.DashScopeImageModel;
+import org.xywenjie.spring.ai.dashscope.api.DashScopeApi;
+import org.xywenjie.spring.ai.dashscope.api.DashScopeAudioApi;
+import org.xywenjie.spring.ai.dashscope.api.DashScopeImageApi;
+import org.xywenjie.spring.ai.dashscope.api.DashScopeApi.ChatModel;
 import org.springframework.boot.SpringBootConfiguration;
 
 @SpringBootConfiguration
@@ -59,6 +62,11 @@ public class DashScopeTestConfiguration {
     public DashScopeImageApi dashScopeImageApi(){
         return DashScopeImageApi.builder().apiKey(getApiKey()).build();
     }
+    
+    @Bean
+    DashScopeAudioApi dashScopeAudioApi() {
+    	return DashScopeAudioApi.builder().apiKey(getApiKey()).build();
+    }
 	
 	private ApiKey getApiKey() {
 		String apiKey = System.getenv("DASHSCOPE_API_KEY");
@@ -74,6 +82,11 @@ public class DashScopeTestConfiguration {
 				.dashScopeApi(dashScopeApi)
 				.defaultOptions(DashScopeChatOptions.builder().model(ChatModel.QWEN_MAX.getName()).build())
 				.build();
+	}
+	
+	@Bean
+	public DashScopeAudioSpeechModel dashScopeAudioSpeechModel(DashScopeAudioApi audioApi) {
+		return new DashScopeAudioSpeechModel(audioApi);
 	}
 
     @Bean

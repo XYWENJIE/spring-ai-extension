@@ -2,8 +2,8 @@ package org.springframework.ai.autoconfigure.dashscope;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
+import org.xywenjie.spring.ai.dashscope.DashScopeChatOptions;
 import org.xywenjie.spring.ai.dashscope.metadata.support.Model;
-import org.xywnejie.spring.ai.dashscope.DashScopeChatOptions;
 
 @ConfigurationProperties(DashscopeProperties.CONFIG_PREFIX)
 public class DashscopeProperties extends DashscopeParentProperties {
