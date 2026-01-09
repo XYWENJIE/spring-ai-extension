@@ -13,11 +13,12 @@ import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.model.SimpleApiKey;
+import org.springframework.http.ResponseEntity;
 import org.springframework.util.FileCopyUtils;
 import org.springframework.web.client.RestClient;
 import org.xywenjie.spring.ai.dashscope.api.DashScopeAudioApi;
-import org.xywenjie.spring.ai.dashscope.api.DashScopeAudioApi.SpeechResponse;
 import org.xywenjie.spring.ai.dashscope.api.dto.DashScopeRequest;
+import org.xywenjie.spring.ai.dashscope.api.dto.DashScopeResponse;
 
 @EnabledIfEnvironmentVariable(named = "DASHSCOPE_API_KEY",matches = ".+")
 public class DashScopeAudioApiIT {
@@ -31,13 +32,18 @@ public class DashScopeAudioApiIT {
 	
 	@Test
 	void speechTranscriptionAndTranslation() throws IOException, InterruptedException {
-		SpeechResponse speechResponse = this.audioApi.createSpeech(DashScopeRequest.builder()
+		ResponseEntity<DashScopeResponse> speechEntity = this.audioApi.createSpeech(DashScopeRequest.builder()
 				.model("qwen3-tts-flash")
 				.text("Hello, my name is Chris and I love Spring A.I.")
 				.voice("Cherry")
-				.build()).getBody();
-		String audioUrl = speechResponse.output().audio().url();
+				.build());
+		speechEntity.getHeaders().forEach((headerName,headerValue) -> {
+			log.info("Heeader:{}:{}",headerName,headerValue);
+		});
+		DashScopeResponse speechResponse = speechEntity.getBody();
+		String audioUrl = speechResponse.getOutput().getAudio().getUrl();
 		log.info("{}",audioUrl);
+		log.info("{},状态：{}",speechResponse.getStatusCode(),speechResponse.getCode());
 		assertThat(audioUrl).isNotEmpty();
 		try(InputStream in = new URL(audioUrl).openStream()){
 			FileCopyUtils.copy(in.readAllBytes(), new File("target/speech.wav"));

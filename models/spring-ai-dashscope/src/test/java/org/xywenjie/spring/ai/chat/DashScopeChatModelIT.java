@@ -1,15 +1,12 @@
-package org.springframework.ai.dashscope.chat;
+package org.xywenjie.spring.ai.chat;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.CALLS_REAL_METHODS;
-import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
-
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.assertj.core.data.Percentage;
@@ -20,40 +17,38 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
 import org.springframework.ai.chat.prompt.Prompt;
-import org.springframework.ai.chat.prompt.PromptTemplate;
-import org.springframework.ai.content.Media;
-import org.springframework.ai.converter.ListOutputConverter;
-import org.springframework.ai.converter.MapOutputConverter;
+import org.springframework.ai.chat.prompt.SystemPromptTemplate;
 import org.springframework.ai.dashscope.DashScopeTestConfiguration;
-import org.springframework.ai.dashscope.api.tool.MockWeatherService;
 import org.springframework.ai.dashscope.testutils.AbstractIT;
-import org.springframework.ai.tool.function.FunctionToolCallback;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.core.convert.support.DefaultConversionService;
-
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.util.MimeTypeUtils;
+import org.springframework.core.io.Resource;
 import org.xywenjie.spring.ai.dashscope.DashScopeChatOptions;
-import org.xywenjie.spring.ai.dashscope.api.DashScopeApi.ChatModel;
-
 import reactor.core.publisher.Flux;
 
 @SpringBootTest(classes = DashScopeTestConfiguration.class)
 @EnabledIfEnvironmentVariable(named = "DASHSCOPE_API_KEY",matches = ".+")
-public class DashsCopeChatModelIT extends AbstractIT {
+public class DashScopeChatModelIT extends AbstractIT {
 
-    private static final Logger logger = LoggerFactory.getLogger(DashsCopeChatModelIT.class);
+    private static final Logger logger = LoggerFactory.getLogger(DashScopeChatModelIT.class);
+    
+    @Value("classpath:/prompts/system-message.st")
+    private Resource systemResource;
 
     @Test
     void roleTest() {
         UserMessage userMessage = new UserMessage(
                 "Tell me about 3 famous pirates from the Golden Age of Piracy and what they did.");
-        Prompt prompt = new Prompt(List.of(userMessage));
+        SystemPromptTemplate systemPromptTemplate = new SystemPromptTemplate(this.systemResource);
+        Message systemMessage = systemPromptTemplate.createMessage(Map.of("name","Bob","voice","pirate"));
+        Prompt prompt = new Prompt(List.of(userMessage,systemMessage));
         ChatResponse chatResponse = this.chatModel.call(prompt);
         assertThat(chatResponse.getResults()).hasSize(1);
         assertThat(chatResponse.getResults().get(0).getOutput().getText()).contains("Blackbeard");
@@ -63,7 +58,9 @@ public class DashsCopeChatModelIT extends AbstractIT {
     void testMessageHistory() {
         UserMessage userMessage = new UserMessage(
                 "Tell me about 3 famous pirates from the Golden Age of Piracy and why they did.");
-        Prompt prompt = new Prompt(List.of(userMessage));
+        SystemPromptTemplate systemPromptTemplate = new SystemPromptTemplate(this.systemResource);
+        Message systemMessage = systemPromptTemplate.createMessage(Map.of("name","Bob","voice","pirate"));
+        Prompt prompt = new Prompt(List.of(userMessage,systemMessage));
 
         ChatResponse response = this.chatModel.call(prompt);
         assertThat(response.getResult().getOutput().getText()).containsAnyOf("Blackbeard", "Bartholomew");
@@ -80,6 +77,7 @@ public class DashsCopeChatModelIT extends AbstractIT {
         UserMessage userMessage = new UserMessage(
                 "List ALL natural numbers in range [1, 100]. Make sure to not omit any.");
         Prompt prompt = new Prompt(List.of(userMessage));
+        
         StringBuilder answer = new StringBuilder();
         CountDownLatch latch = new CountDownLatch(1);
 
@@ -113,6 +111,46 @@ public class DashsCopeChatModelIT extends AbstractIT {
         chatResponseFlux.subscribe();
         assertThat(latch.await(120, TimeUnit.SECONDS)).isTrue();
         assertThat(answer).contains("1st");
+    }
+    
+    @Test
+    void ensureChatResponseAsContentDoesNotSwallowBlankSpace() throws InterruptedException {
+    	UserMessage userMessage = new UserMessage("Who is George Washington? - use first as 1st");
+    	Prompt prompt = new Prompt(List.of(userMessage));
+    	
+    	StringBuilder answer = new StringBuilder();
+    	CountDownLatch latch = new CountDownLatch(1);
+    	
+    	ChatClient chatClient = ChatClient.builder(this.dashScopeChatModel).build();
+    	
+    	Flux<String> chatResponseFlux = chatClient.prompt(prompt)
+    			.stream().content().doOnNext(answer::append).doOnComplete(() -> {
+    				logger.info(answer.toString());
+    				latch.countDown();
+    			});
+    	chatResponseFlux.subscribe();
+    	assertThat(latch.await(120,TimeUnit.SECONDS)).isTrue();
+    	assertThat(answer).contains("1st");
+    }
+    
+    @Test
+    void streamRoleTest() {
+    	UserMessage userMessage = new UserMessage(
+    			"Tell me about 3 famous pirates from the Golden Age of Piracy and what they did.");
+    	SystemPromptTemplate systemPromptTemplate = new SystemPromptTemplate(this.systemResource);
+    	Message systemMessage = systemPromptTemplate.createMessage(Map.of("name","Bob","voice","pirate"));
+    	Prompt prompt = new Prompt(List.of(userMessage,systemMessage));
+    	Flux<ChatResponse> flux = this.streamingChatModel.stream(prompt);
+    	
+    	List<ChatResponse> response = flux.collectList().block();
+    	assertThat(response.size()).isGreaterThan(1);
+    	
+    	String stitchedResponseContent = response.stream()
+    			.map(ChatResponse::getResults)
+    			.flatMap(List::stream).map(Generation::getOutput)
+    			.map(AssistantMessage::getText)
+    			.collect(Collectors.joining());
+    	assertThat(stitchedResponseContent).contains("Blackbeard");
     }
 
     @Test

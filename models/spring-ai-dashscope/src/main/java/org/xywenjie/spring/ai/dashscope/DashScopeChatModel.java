@@ -194,7 +194,7 @@ public class DashScopeChatModel implements ChatModel {
             observation.parentObservation(contentView.getOrDefault(ObservationThreadLocalAccessor.KEY,null)).start();
             Map<Integer,ToolCall> toolCallMap = new HashMap<>();
             Flux<ChatResponse> chatResponse = completionChunks.switchMap(chatCompletion -> Mono.just(chatCompletion).map(chatCompletion2 -> {
-                logger.info("Flux响应内容：{}",ModelOptionsUtils.toJsonString(chatCompletion2));
+                //logger.info("Flux响应内容：{}",ModelOptionsUtils.toJsonString(chatCompletion2));
                 try {
                     String id = chatCompletion2.requestId();
                     List<Generation> generations = chatCompletion2.output().choices().stream().map(choice -> {

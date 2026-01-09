@@ -2,13 +2,13 @@
 
 ### 模块简介
 
-**Spring AI Moyin**是Spring AI Extension项目的一部分，为墨音AI提供Spring AI框架的集成支持。该模块基于Spring AI基础架构，封装了墨音AI的RESTful API接口，使开发者能够在Spring应用中轻松使用墨音AI的大模型服务。
+**Spring AI Moyin**是Spring AI Extension项目的一部分，为魔音AI提供Spring AI框架的集成支持。该模块基于Spring AI基础架构，封装了魔音AI的RESTful API接口，使开发者能够在Spring应用中轻松使用魔音AI的大模型服务。
 
-墨音AI官方文档：https://openapi.moyin.com/document
+魔音AI官方文档：https://openapi.moyin.com/document
 
 ### 功能特性
 
-支持墨音AI的主要功能模块：
+支持魔音AI的主要功能模块：
 
 1. **对话模型** - 支持文本对话、问答等场景
 2. **图像生成** - 支持AI图像生成能力
@@ -58,7 +58,7 @@ public String chat(String message) {
 
 ### 注意事项
 
-- 请确保已获取有效的墨音AI API密钥
+- 请确保已获取有效的魔音AI API密钥
 - 建议在生产环境使用稳定版本，SNAPSHOT版本请谨慎评估
 - 由于Spring AI框架正在快速迭代，可能会出现破坏性更新
 

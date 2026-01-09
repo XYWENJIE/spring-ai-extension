@@ -3,8 +3,11 @@ package org.xywenjie.spring.ai.dashscope.api;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.ai.model.ApiKey;
 import org.springframework.ai.model.NoopApiKey;
 import org.springframework.ai.retry.RetryUtils;
@@ -33,6 +36,8 @@ import java.util.function.Consumer;
  * @author Huang Wenjie(黄文杰)
  */
 public class DashScopeAudioApi {
+	
+	private final Logger log = LoggerFactory.getLogger(getClass());
 
 	/**
 	 * REST客户端，用于同步HTTP请求
@@ -108,129 +113,6 @@ public class DashScopeAudioApi {
 					return clientResponse.bodyToFlux(DashScopeResponse.class)
 							.map(response -> ResponseEntity.ok().headers(headers).body(response));
 				});
-	}
-
-	/**
-	 * 生成运行任务的WebSocket命令
-	 * @param taskId 任务ID
-	 * @return JSON格式的命令字符串
-	 */
-	private String generateRunTaskCommand(String taskId) {
-		Map initMap = Map.of("header", Map.of("action", "run-task", "task_id", taskId, "streaming", "duplex"),
-				"payload", Map.of("task_group", "audio", "task", "tts", "function", "SpeechSynthesizer", "model",
-						"cosyvoice-v3-flash"));
-		try {
-			return objectMapper.writeValueAsString(initMap);
-		} catch (JsonProcessingException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	/**
-	 * CosyVoice语音合成请求
-	 */
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public record CosyVoiceRequest(Header header, Payload payload) {
-
-		/**
-		 * 请求头信息
-		 */
-		public record Header(@JsonProperty("action") String action, @JsonProperty("task_id") String taskId,
-				@JsonProperty("streaming") String streaming) {
-		}
-
-		/**
-		 * 请求负载信息
-		 */
-		public record Payload() {
-		}
-	}
-
-	/**
-	 * TTS模型枚举
-	 */
-	public enum TtsModel {
-		/**
-		 * Qwen3 TTS Flash模型
-		 */
-		QWEN3_TTS_FLASH("qwen3-tts-flash");
-
-		/**
-		 * 模型值
-		 */
-		public final String value;
-
-		TtsModel(String value) {
-			this.value = value;
-		}
-
-		/**
-		 * 获取模型值
-		 * @return 模型值字符串
-		 */
-		public String getValue() {
-			return value;
-		}
-	}
-
-	/**
-	 * 运行任务命令
-	 */
-	public record RunTaskCommand() {
-	}
-
-	/**
-	 * 语音合成请求参数
-	 */
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public record SpeechRequest(@JsonProperty("model") String model, @JsonProperty("text") String text,
-			@JsonProperty("voice") String voice, @JsonProperty("language_type") String languageType,
-			@JsonProperty("stream") Boolean stream) {
-	}
-
-	/**
-	 * 语音合成响应
-	 */
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public record SpeechResponse(@JsonProperty("output") Output output, @JsonProperty("usage") Usage usage,
-			@JsonProperty("request_id") String requestId) {
-		/**
-		 * 输出信息
-		 */
-		public record Output(@JsonProperty("finish_reason") String finishReason, @JsonProperty("audio") Audio audio) {
-		}
-
-		/**
-		 * 音频信息
-		 */
-		public record Audio(@JsonProperty("url") String url, @JsonProperty("data") String data,
-				@JsonProperty("id") String id, @JsonProperty("expires_at") Integer expiresAt
-
-		) {
-		}
-
-		/**
-		 * 使用量信息
-		 */
-		public record Usage(@JsonProperty("input_tokens_details") InputTokensDetails inputTokensDetails,
-				@JsonProperty("total_tokens") Integer totalTokens, @JsonProperty("output_tokens") Integer outputTokens,
-				@JsonProperty("input_tokens") Integer inputTokens,
-				@JsonProperty("output_tokens_details") OutputTokenDetails outputTokenDetails
-
-		) {
-		}
-
-		/**
-		 * 输入token详情
-		 */
-		public record InputTokensDetails() {
-		}
-
-		/**
-		 * 输出token详情
-		 */
-		public record OutputTokenDetails() {
-		}
 	}
 
 	/**

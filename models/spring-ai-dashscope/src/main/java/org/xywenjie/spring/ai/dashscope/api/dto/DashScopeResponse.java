@@ -13,6 +13,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class DashScopeResponse {
+	
+	@JsonProperty("status_code")
+	private Integer statusCode;
 
     @JsonProperty("output")
     private Output output;
@@ -28,6 +31,14 @@ public class DashScopeResponse {
 
     @JsonProperty("message")
     private String message;
+    
+    public Integer getStatusCode() {
+		return statusCode;
+	}
+    
+    public void setStatusCode(Integer statusCode) {
+		this.statusCode = statusCode;
+	}
     
 
     public Output getOutput() {
@@ -72,6 +83,15 @@ public class DashScopeResponse {
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
 	public class Output {
+    	
+    	@JsonProperty("text")
+    	private String text;
+    	
+    	@JsonProperty("finish_reason")
+    	private String finishReason;
+    	
+    	@JsonProperty("choices")
+    	private String choices;
 
         @JsonProperty("task_id")
         private String taskId;
@@ -102,6 +122,30 @@ public class DashScopeResponse {
         
         @JsonProperty("embeddings")
         private List<Embedding> embeddings;
+
+		public String getText() {
+			return text;
+		}
+
+		public void setText(String text) {
+			this.text = text;
+		}
+
+		public String getFinishReason() {
+			return finishReason;
+		}
+
+		public void setFinishReason(String finishReason) {
+			this.finishReason = finishReason;
+		}
+
+		public String getChoices() {
+			return choices;
+		}
+
+		public void setChoices(String choices) {
+			this.choices = choices;
+		}
 
 		public String getTaskId() {
 			return taskId;
@@ -184,6 +228,24 @@ public class DashScopeResponse {
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public class Usage {
+    	
+    	//输入文本的 Token 消耗量。对于通义千问3-TTS-Flash模型，该字段固定为0
+    	@JsonProperty("input_tokens")
+    	private Integer inputTokens;
+    	
+    	@JsonProperty("input_tokens_details")
+    	private InputTokensDetails inputTokensDetails;
+    	
+    	//输出音频的 Token 消耗量。对于通义千问3-TTS-Flash模型，该字段固定为0。
+    	@JsonProperty("output_tokens")
+    	private Integer outputTokens;
+    	
+    	@JsonProperty("output_token_details")
+    	private OutputTokenDetails outputTokenDetails;
+    	
+    	//输入文本的字符数。仅通义千问3-TTS-Flash模型返回该字段。
+    	@JsonProperty("characters")
+    	private Integer characters;
 
         @JsonProperty("duration")
         private Integer duration;
@@ -202,6 +264,46 @@ public class DashScopeResponse {
         
         @JsonProperty("total_tokens")
         private Integer totalTokens;
+
+		public Integer getInputTokens() {
+			return inputTokens;
+		}
+
+		public void setInputTokens(Integer inputTokens) {
+			this.inputTokens = inputTokens;
+		}
+
+		public InputTokensDetails getInputTokensDetails() {
+			return inputTokensDetails;
+		}
+
+		public void setInputTokensDetails(InputTokensDetails inputTokensDetails) {
+			this.inputTokensDetails = inputTokensDetails;
+		}
+
+		public Integer getOutputTokens() {
+			return outputTokens;
+		}
+
+		public void setOutputTokens(Integer outputTokens) {
+			this.outputTokens = outputTokens;
+		}
+
+		public OutputTokenDetails getOutputTokenDetails() {
+			return outputTokenDetails;
+		}
+
+		public void setOutputTokenDetails(OutputTokenDetails outputTokenDetails) {
+			this.outputTokenDetails = outputTokenDetails;
+		}
+
+		public Integer getCharacters() {
+			return characters;
+		}
+
+		public void setCharacters(Integer characters) {
+			this.characters = characters;
+		}
 
 		public Integer getDuration() {
 			return duration;
@@ -254,6 +356,47 @@ public class DashScopeResponse {
     }
     
     @JsonInclude(Include.NON_NULL)
+    public static class InputTokensDetails{
+    	
+    	@JsonProperty("text_tokens")
+    	private Integer textTokens;
+    	
+    	public Integer getTextTokens() {
+			return textTokens;
+		}
+    	
+    	public void setTextTokens(Integer textTokens) {
+			this.textTokens = textTokens;
+		}
+    }
+    
+    @JsonInclude(Include.NON_NULL)
+    public static class OutputTokensDetails{
+    	
+    	@JsonProperty("audio_tokens")
+    	private Integer audioTokens;
+    	
+    	@JsonProperty("text_tokens")
+    	private Integer textTokens;
+    	
+    	public Integer getAudioTokens() {
+			return audioTokens;
+		}
+    	
+    	public void setAudioTokens(Integer audioTokens) {
+			this.audioTokens = audioTokens;
+		}
+    	
+    	public Integer getTextTokens() {
+			return textTokens;
+		}
+    	
+    	public void setTextTokens(Integer textTokens) {
+			this.textTokens = textTokens;
+		}
+    }
+    
+    @JsonInclude(Include.NON_NULL)
     public static class Embedding{
     	
     	@JsonProperty("sparse_embedding")
@@ -283,7 +426,7 @@ public class DashScopeResponse {
     }
     
     @JsonInclude(Include.NON_NULL)
-    public class SparseEmbedding{
+    public static class SparseEmbedding{
     	
     	@JsonProperty("index")
     	private Integer index;
@@ -320,9 +463,9 @@ public class DashScopeResponse {
     }
     
     @JsonInclude(Include.NON_NULL)
-    public class Audio{
+    public static class Audio{
     	
-    	@JsonProperty("URL")
+    	@JsonProperty("url")
     	private String url;
     	
     	@JsonProperty("data")
@@ -365,7 +508,9 @@ public class DashScopeResponse {
 		public void setExpiresAt(Integer expiresAt) {
 			this.expiresAt = expiresAt;
 		}
-    	
+    }
+    
+    public static class OutputTokenDetails{
     	
     }
 }
