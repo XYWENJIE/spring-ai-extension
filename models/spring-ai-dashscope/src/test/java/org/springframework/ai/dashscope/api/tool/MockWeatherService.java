@@ -18,7 +18,7 @@ public class MockWeatherService implements Function<MockWeatherService.Request, 
 			@JsonProperty(required = true,value = "lon") @JsonPropertyDescription("The city longitude") double lon,
 			@JsonProperty(required = true,value = "unit") @JsonPropertyDescription("Temperature unit") Unit unit) {}
 	
-	public record Response(String location,double temp,double feels_link,double temp_min,
+	public record Response(double temp,double feels_link,double temp_min,
 			double temp_max,int pressure,int humidity,Unit unit) {}
 	
 	public enum Unit{
@@ -41,7 +41,7 @@ public class MockWeatherService implements Function<MockWeatherService.Request, 
 		}else if(request.location().contains("San Francisco")) {
 			temperature = 30;
 		}
-		return new Response(request.location,temperature,15,20,2,53,45,Unit.C);
+		return new Response(temperature,15,20,2,53,45,Unit.C);
 	}
 
 }

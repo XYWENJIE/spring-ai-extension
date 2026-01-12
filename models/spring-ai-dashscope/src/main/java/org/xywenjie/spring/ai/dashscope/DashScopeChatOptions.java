@@ -1,15 +1,12 @@
 package org.xywenjie.spring.ai.dashscope;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.model.ModelOptionsUtils;
 import org.springframework.ai.model.tool.ToolCallingChatOptions;
 import org.springframework.ai.tool.ToolCallback;
+import org.springframework.util.Assert;
 import org.xywenjie.spring.ai.dashscope.api.DashScopeApi;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -33,6 +30,9 @@ public class DashScopeChatOptions implements ToolCallingChatOptions{
 	
 	@JsonIgnore
 	private Map<String,Object> toolContext = new HashMap<>();
+
+	@JsonIgnore
+	private List<ToolCallback> toolCallbacks = new ArrayList<>();
 	
 	public static Builder builder() {
 		return new Builder();
@@ -111,12 +111,13 @@ public class DashScopeChatOptions implements ToolCallingChatOptions{
 
     @Override
     public List<ToolCallback> getToolCallbacks() {
-        return List.of();
+        return toolCallbacks;
     }
 
     @Override
     public void setToolCallbacks(List<ToolCallback> toolCallbacks) {
-
+		Assert.notNull(toolCallbacks,"toolCallbacks cannot be null");
+		this.toolCallbacks = toolCallbacks;
     }
 
 	@Override
@@ -164,6 +165,30 @@ public class DashScopeChatOptions implements ToolCallingChatOptions{
 		
 		public Builder model(String model) {
 			this.options.model = model;
+			return this;
+		}
+
+		public Builder maxTokens(Integer maxTokens){
+			if(maxTokens != null && this.options.parameters.)
+		}
+
+		public Builder toolCallbacks(List<ToolCallback> toolCallbacks){
+			this.options.setToolCallbacks(toolCallbacks);
+			return this;
+		}
+
+		public Builder toolCallbacks(ToolCallback... toolCallbacks){
+			Assert.notNull(toolCallbacks,"toolCallbacks cannot be null");
+			this.options.toolCallbacks.addAll(Arrays.asList(toolCallbacks));
+			return this;
+		}
+
+		public Builder toolContext(Map<String,Object> toolContext){
+			if(this.options.toolContext == null){
+				this.options.toolContext = toolContext;
+			}else{
+				this.options.toolContext.putAll(toolContext);
+			}
 			return this;
 		}
 		

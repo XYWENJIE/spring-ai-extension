@@ -305,7 +305,8 @@ public class DashScopeRequest {
     /**
      * Message class representing a message in the conversation
      */
-    public class Message{
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public static class Message{
 
         @JsonProperty("role")
         private String role;
@@ -343,6 +344,29 @@ public class DashScopeRequest {
          */
         public void setContent(String content) {
             this.content = content;
+        }
+
+        public static Builder builder(){
+            return new Builder();
+        }
+
+        public static class Builder{
+
+            private Message messageRequest = new Message();
+
+            public Builder content(Object content){
+                messageRequest.setContent(content.toString());
+                return this;
+            }
+
+            public Builder role(String role){
+                messageRequest.setRole(role);
+                return this;
+            }
+
+            public Message build(){
+                return messageRequest;
+            }
         }
     }
 

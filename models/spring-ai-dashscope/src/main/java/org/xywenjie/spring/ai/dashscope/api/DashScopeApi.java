@@ -1,5 +1,7 @@
 package org.xywenjie.spring.ai.dashscope.api;
 
+import java.net.http.HttpClient;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -8,15 +10,13 @@ import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.ai.model.ApiKey;
-import org.springframework.ai.model.ChatModelDescription;
-import org.springframework.ai.model.ModelOptionsUtils;
-import org.springframework.ai.model.NoopApiKey;
-import org.springframework.ai.model.SimpleApiKey;
+import org.springframework.ai.model.*;
 import org.springframework.ai.retry.RetryUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
+import org.springframework.http.client.reactive.JdkClientHttpConnector;
 import org.springframework.util.*;
 import org.springframework.web.client.ResponseErrorHandler;
 import org.springframework.web.client.RestClient;
@@ -26,8 +26,6 @@ import org.xywenjie.spring.ai.dashscope.api.dto.DashScopeResponse;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -36,15 +34,13 @@ import reactor.core.publisher.Mono;
  */
 public class DashScopeApi {
 
-	private final Logger logger = LoggerFactory.getLogger(getClass());
-
-	private final ObjectMapper objectMapper = new ObjectMapper();
+	private static final Logger log = LoggerFactory.getLogger(DashScopeApi.class);
 
 	public static Builder builder() {
 		return new Builder();
 	}
 
-	public static final DashScopeApi.ChatModel DEFAULT_CAHT_MODEL = ChatModel.QWEN_PLUS;
+	public static final DashScopeApi.ChatModel DEFAULT_CHAT_MODEL = ChatModel.QWEN_PLUS;
 	
 	public static final String DEFAULT_EMBEDDING_MODEL = "text-embedding-v4";
 
@@ -60,6 +56,18 @@ public class DashScopeApi {
 
 	private final WebClient webClient;
 
+	/**
+	 * 构造函数，用于初始化DashScopeApi实例。
+	 * 设置API的基本配置，包括基础URL、认证密钥、HTTP头、客户端构建器等。
+	 *
+	 * @param baseUrl 基础URL，API服务的基础地址
+	 * @param apiKey API密钥，用于身份验证
+	 * @param headers HTTP头信息，用于设置额外的请求头
+	 * @param completionsPath 补全API端点路径
+	 * @param restClientBuilder REST客户端构建器，用于创建同步HTTP客户端
+	 * @param webClientBuilder Web客户端构建器，用于创建异步Web客户端
+	 * @param responseErrorHandler 响应错误处理器，处理API响应错误
+	 */
 	public DashScopeApi(String baseUrl, ApiKey apiKey, HttpHeaders headers, String completionsPath,
 			RestClient.Builder restClientBuilder, WebClient.Builder webClientBuilder,
 			ResponseErrorHandler responseErrorHandler) {
@@ -78,26 +86,45 @@ public class DashScopeApi {
 		this.webClient = webClientBuilder.baseUrl(baseUrl).defaultHeaders(finalHeaders).build();
 	}
 
-	public ResponseEntity<ChatCompletion> chatCompletionEntity(ChatCompletionRequest chatRequest) {
+	/**
+	 * 发起聊天完成请求并返回响应实体。
+	 * 此方法是便捷方法，使用默认的HTTP头信息调用带HttpHeaders参数的重载方法。
+	 *
+	 * @param chatRequest 聊天完成请求对象，包含输入消息、模型等参数
+	 * @return ResponseEntity<ChatCompletion> 包含聊天完成结果的响应实体
+	 */
+	public ResponseEntity<DashScopeResponse> chatCompletionEntity(DashScopeRequest chatRequest) {
 		return chatCompletionEntity(chatRequest, new HttpHeaders());
 	}
 
-	public ResponseEntity<ChatCompletion> chatCompletionEntity(ChatCompletionRequest chatRequest,
+	public ResponseEntity<DashScopeResponse> chatCompletionEntity(DashScopeRequest chatRequest,
 			HttpHeaders additionalHttpHeader) {
 		Assert.notNull(chatRequest, "The request body can not be null.");
-		Assert.isTrue(!chatRequest.stream(), "Request must set the stream property to false.");
+		//Assert.isTrue(!chatRequest.stream(), "Request must set the stream property to false.");
 		Assert.notNull(additionalHttpHeader, "The additional HTTP headers can not be null.");
-		if(chatRequest.model().contains("vl")) {
+		if(chatRequest.getModel().contains("vl")) {
 			completionsPath = multimodelPath;
 		}
-		return this.restClient.post().uri(completionsPath).headers(headers -> headers.addAll(additionalHttpHeader))
-				.body(chatRequest).retrieve().toEntity(ChatCompletion.class);
+		//log.info("提交参数：body:{}", ModelOptionsUtils.toJsonString(chatRequest));
+		return this.restClient.post().uri(completionsPath).headers(headers -> {
+					headers.addAll(additionalHttpHeader);
+					//headers.setBearerAuth(apiKey.getValue());
+					//log.info("Header:{}",headers);
+				})
+				.body(chatRequest).retrieve().toEntity(DashScopeResponse.class);
 	}
 
 	public Flux<ChatCompletion> chatCompletionStream(ChatCompletionRequest chatRequest) {
 		return this.chatCompletionStream(chatRequest, new HttpHeaders());
 	}
 
+	/*** 发起流式聊天完成请求，以Flux形式返回响应数据。
+	 ** 此方法支持服务器发送事件(SSE)，用于接收实时的聊天完成结果流。
+	 *
+	 * @param chatRequest 聊天完成请求对象，必须设置stream属性为true
+	 * @param additionalHttpHeader 额外的HTTP头信息，用于自定义请求头
+	 * @return Flux<ChatCompletion> 包含聊天完成结果流的响应对象
+	 **/
 	public Flux<ChatCompletion> chatCompletionStream(ChatCompletionRequest chatRequest,
 			HttpHeaders additionalHttpHeader) {
 		Assert.notNull(chatRequest, "The request body can not be null.");
@@ -287,6 +314,7 @@ public class DashScopeApi {
 			return rawContent;
 		}
 
+		@SuppressWarnings("unchecked")
 		public void setContent(Object rawContent) {
 			if(rawContent instanceof ArrayList<?> contentListValue) {
 				this.rawContent = contentListValue.stream().map(element -> {
@@ -621,6 +649,10 @@ public class DashScopeApi {
 
 		public DashScopeApi build() {
 			Assert.notNull(this.apiKey, "apiKey must be set");
+			HttpClient httpClient = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
+			JdkClientHttpRequestFactory requestFactory = new JdkClientHttpRequestFactory(httpClient);
+			requestFactory.setReadTimeout(Duration.ofSeconds(45));
+			this.restClientBuilder.requestFactory(requestFactory);
 			return new DashScopeApi(this.baseUrl, this.apiKey, this.headers, this.completionsPath,
 					this.restClientBuilder, this.webClientBuilder, this.responseErrorHandler);
 		}
