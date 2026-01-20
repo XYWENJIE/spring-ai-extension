@@ -17,6 +17,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.util.Assert;
 import org.springframework.web.client.ResponseErrorHandler;
 import org.springframework.web.client.RestClient;
+import org.xywenjie.spring.ai.dashscope.api.dto.DashScopeRequest;
+import org.xywenjie.spring.ai.dashscope.api.dto.DashScopeResponse;
 
 import java.util.List;
 
@@ -56,21 +58,24 @@ public class DashScopeImageApi {
     }
     
 
-    public ResponseEntity<DashScopeImageResponse> getImageGenTaskResult(String taskId){
-        return this.restClient.get().uri("/api/v1/tasks/{taskId}",taskId).retrieve().toEntity(DashScopeImageResponse.class);
+    public ResponseEntity<DashScopeResponse> getImageGenTaskResult(String taskId){
+        return this.restClient.get().uri("/api/v1/tasks/{taskId}",taskId).retrieve().toEntity(DashScopeResponse.class);
     }
 
     /**
      * 获取多模态生成结果的同步方法
      * @return 多模态生成的响应结果
      */
-    public HttpEntity<DashScopeImageResponse> getMultimodalGenerationResult(ImageRequest imageRequest){
+    public HttpEntity<DashScopeResponse> getMultimodalGenerationResult(DashScopeRequest imageRequest){
         return this.restClient.post().uri("/api/v1/services/aigc/multimodal-generation/generation")
-        		.body(imageRequest).retrieve().toEntity(DashScopeImageResponse.class);
+        		.body(imageRequest).retrieve().toEntity(DashScopeResponse.class);
     }
 
-    public HttpEntity<DashScopeImageResponse> submitImageGenTask(ImageRequest imageRequest) {
-        Assert.isTrue(imageRequest.model().equals("wan2.6-t2i"), "当前模型"+imageRequest.model()+"该模型只能同步发送getMultimodalGenerationResult方法");
+    public HttpEntity<DashScopeResponse> submitImageGenTask(DashScopeRequest imageRequest) {
+        //Assert.isTrue(imageRequest.getModel().equals("wan2.6-t2i"), "当前模型"+imageRequest.getModel()+"该模型只能同步发送getMultimodalGenerationResult方法");
+        if(imageRequest.getModel().equals("wan2.6-t2i")) {
+        	return getMultimodalGenerationResult(imageRequest);
+        }
         try {
             String body = objectMapper.writeValueAsString(imageRequest);
             logger.info(body);
@@ -78,7 +83,7 @@ public class DashScopeImageApi {
             throw new RuntimeException(e);
         }
         return this.restClient.post().uri("/api/v1/services/aigc/text2image/image-synthesis").header("X-DashScope-Async", "enable")
-        		.body(imageRequest).retrieve().toEntity(DashScopeImageResponse.class);
+        		.body(imageRequest).retrieve().toEntity(DashScopeResponse.class);
     }
 
     public enum ImageModel{
@@ -96,48 +101,48 @@ public class DashScopeImageApi {
         }
     }
 
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    public record ImageRequest(String model,Input input,Parameters parameters){
-
-        @JsonInclude(JsonInclude.Include.NON_NULL)
-        public record Input(String prompt,@JsonProperty("negative_prompt") String negativePrompt){}
-
-        @JsonInclude(JsonInclude.Include.NON_NULL)
-        public record Parameters(
-                @JsonProperty("size") String size,
-                Integer n,
-                @JsonProperty("prompt_extend") Boolean promptExtend,
-                @JsonProperty("watermark") Boolean watermark,
-                Integer seed){
-
-        }
-    }
-
-
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    public record DashScopeImageResponse(
-            @JsonProperty("output") Output output,
-            @JsonProperty("request_id") String requestId,
-            String code,String message,Usage usage){
-
-        public record Output(
-                @JsonProperty("task_id") String taskId,
-                @JsonProperty("task_status") String taskStatus,
-                @JsonProperty("results") List<Result> results,
-                @JsonProperty("task_metrics") TaskMetrics taskMetrics,
-                @JsonProperty("code") String code,
-                @JsonProperty("message") String message){}
-
-        public record Result(String url,String code,String message){}
-
-        public record TaskMetrics(
-                @JsonProperty("TOTAL") Integer total,
-                @JsonProperty("SUCCEEDED") Integer succeeded,
-                @JsonProperty("FAILED") Integer failed){}
-
-        public record Usage(@JsonProperty("image_count") Integer imageCount){}
-
-    }
+//    @JsonInclude(JsonInclude.Include.NON_NULL)
+//    public record ImageRequest(String model,Input input,Parameters parameters){
+//
+//        @JsonInclude(JsonInclude.Include.NON_NULL)
+//        public record Input(String prompt,@JsonProperty("negative_prompt") String negativePrompt){}
+//
+//        @JsonInclude(JsonInclude.Include.NON_NULL)
+//        public record Parameters(
+//                @JsonProperty("size") String size,
+//                Integer n,
+//                @JsonProperty("prompt_extend") Boolean promptExtend,
+//                @JsonProperty("watermark") Boolean watermark,
+//                Integer seed){
+//
+//        }
+//    }
+//
+//
+//    @JsonInclude(JsonInclude.Include.NON_NULL)
+//    public record DashScopeImageResponse(
+//            @JsonProperty("output") Output output,
+//            @JsonProperty("request_id") String requestId,
+//            String code,String message,Usage usage){
+//
+//        public record Output(
+//                @JsonProperty("task_id") String taskId,
+//                @JsonProperty("task_status") String taskStatus,
+//                @JsonProperty("results") List<Result> results,
+//                @JsonProperty("task_metrics") TaskMetrics taskMetrics,
+//                @JsonProperty("code") String code,
+//                @JsonProperty("message") String message){}
+//
+//        public record Result(String url,String code,String message){}
+//
+//        public record TaskMetrics(
+//                @JsonProperty("TOTAL") Integer total,
+//                @JsonProperty("SUCCEEDED") Integer succeeded,
+//                @JsonProperty("FAILED") Integer failed){}
+//
+//        public record Usage(@JsonProperty("image_count") Integer imageCount){}
+//
+//    }
 
     public static final class Builder{
 

@@ -114,7 +114,7 @@ public class DashScopeApi {
 				.body(chatRequest).retrieve().toEntity(DashScopeResponse.class);
 	}
 
-	public Flux<ChatCompletion> chatCompletionStream(ChatCompletionRequest chatRequest) {
+	public Flux<DashScopeResponse> chatCompletionStream(DashScopeRequest chatRequest) {
 		return this.chatCompletionStream(chatRequest, new HttpHeaders());
 	}
 
@@ -125,13 +125,13 @@ public class DashScopeApi {
 	 * @param additionalHttpHeader 额外的HTTP头信息，用于自定义请求头
 	 * @return Flux<ChatCompletion> 包含聊天完成结果流的响应对象
 	 **/
-	public Flux<ChatCompletion> chatCompletionStream(ChatCompletionRequest chatRequest,
+	public Flux<DashScopeResponse> chatCompletionStream(DashScopeRequest chatRequest,
 			HttpHeaders additionalHttpHeader) {
 		Assert.notNull(chatRequest, "The request body can not be null.");
-		Assert.isTrue(chatRequest.stream(), "Request must set the stream property to true.");
+		//Assert.isTrue(chatRequest.stream(), "Request must set the stream property to true.");
 		additionalHttpHeader.add("X-DashScope-SSE", "enable");
 		return this.webClient.post().uri(this.completionsPath).headers(headers -> headers.addAll(additionalHttpHeader))
-				.body(Mono.just(chatRequest), ChatCompletionRequest.class).retrieve().bodyToFlux(ChatCompletion.class);
+				.body(Mono.just(chatRequest), DashScopeRequest.class).retrieve().bodyToFlux(DashScopeResponse.class);
 	}
 
 	public enum ChatModel implements ChatModelDescription {
@@ -175,436 +175,436 @@ public class DashScopeApi {
 		}
 	}
 
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public record ChatCompletionRequest(@JsonProperty("input") Input input, @JsonProperty("model") String model,
-			@JsonProperty("stream") Boolean stream, @JsonProperty("parameters") Parameters parameters) {
-
-		public ChatCompletionRequest(List<ChatCompletionMessage> messages, Boolean stream) {
-			this(new Input(messages), null, stream, new Parameters());
-		}
-	};
-
-	public record Input(@JsonProperty("messages") List<ChatCompletionMessage> messages) {
-
-	}
-
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public static class Parameters {
-
-		@JsonProperty("temperature")
-		private Float temperature;
-
-		@JsonProperty("seed")
-		private Integer seed;
-
-		@JsonProperty("stream")
-		private Boolean stream;
-
-		@JsonProperty("incremental_output")
-		private Boolean incrementalOutput;
-
-		@JsonProperty("result_format")
-		private String resultFormat = "message";
-
-		@JsonProperty("tool_choice")
-		private String toolChoice = "auto";
-
-		@JsonProperty("tools")
-		private List<FunctionTool> tools;
-
-		@JsonProperty("parallel_tool_calls")
-		private Boolean parallelToolCalls = Boolean.TRUE;
-
-		public Float getTemperature() {
-			return temperature;
-		}
-
-		public void setTemperature(Float temperature) {
-			this.temperature = temperature;
-		}
-
-		public Integer getSeed() {
-			return seed;
-		}
-
-		public void setSeed(Integer seed) {
-			this.seed = seed;
-		}
-
-		public Boolean getStream() {
-			return stream;
-		}
-
-		public void setStream(Boolean stream) {
-			this.stream = stream;
-		}
-
-		public Boolean getIncrementalOutput() {
-			return incrementalOutput;
-		}
-
-		public void setIncrementalOutput(Boolean incrementalOutput) {
-			this.incrementalOutput = incrementalOutput;
-		}
-
-		public String getResultFormat() {
-			return resultFormat;
-		}
-
-		public void setResultFormat(String resultFormat) {
-			this.resultFormat = resultFormat;
-		}
-
-		public String getToolChoice() {
-			return toolChoice;
-		}
-
-		public void setToolChoice(String toolChoice) {
-			this.toolChoice = toolChoice;
-		}
-
-		public List<FunctionTool> getTools() {
-			return tools;
-		}
-
-		public void setTools(List<FunctionTool> tools) {
-			this.tools = tools;
-		}
-
-	}
-
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public static class ChatCompletionMessage{
-		
-		@JsonProperty("content") Object rawContent;
-		@JsonProperty("role") Role role;
-		@JsonProperty("tool_call_id") String toolCallId;
-		@JsonProperty("reasoning_content") String reasoningContent;
-		@JsonProperty("tool_calls") List<ToolCall> toolCalls;
-		
-		public ChatCompletionMessage() {
-			
-		}
-
-		public ChatCompletionMessage(Object content,Role role){
-			this.rawContent = content;
-			this.role = role;
-		}
-		
-		public ChatCompletionMessage(Object content,Role role,List<ToolCall> toolCalls){
-			this.rawContent = content;
-			this.role = role;
-			this.toolCalls = toolCalls;
-		}
-		
-		public ChatCompletionMessage(Object content,Role role,String toolCallId){
-			this.rawContent = content;
-			this.role = role;
-			this.toolCallId = toolCallId;
-		}
-
-		public Object getContent() {
-			if (this.rawContent == null) {
-				return null;
-			}
-			if (this.rawContent instanceof String text) {
-				return text;
-			}
-			//throw new IllegalStateException("The content is not a string!");
-			return rawContent;
-		}
-
-		@SuppressWarnings("unchecked")
-		public void setContent(Object rawContent) {
-			if(rawContent instanceof ArrayList<?> contentListValue) {
-				this.rawContent = contentListValue.stream().map(element -> {
-					LinkedHashMap<String, Object> map = (LinkedHashMap<String, Object>)element;
-					MediaContent mediaContent = new MediaContent();
-					if(!ObjectUtils.isEmpty(map.get("text"))){
-						mediaContent.setText(ObjectUtils.getDisplayString(map.get("text")));
-					}
-					if(!ObjectUtils.isEmpty(map.get("image"))){
-						mediaContent.setImage(ObjectUtils.getDisplayString(map.get("image")));
-					}
-					return mediaContent;
-				}).toList();
-			}else {
-				this.rawContent = rawContent;	
-			}
-		}
-
-		public Role getRole() {
-			return role;
-		}
-
-		public void setRole(Role role) {
-			this.role = role;
-		}
-
-		public String getToolCallId() {
-			return toolCallId;
-		}
-
-		public void setToolCallId(String toolCallId) {
-			this.toolCallId = toolCallId;
-		}
-
-		public String getReasoningContent() {
-			return reasoningContent;
-		}
-
-		public void setReasoningContent(String reasoningContent) {
-			this.reasoningContent = reasoningContent;
-		}
-
-		public List<ToolCall> getToolCalls() {
-			return toolCalls;
-		}
-
-		public void setToolCalls(List<ToolCall> toolCalls) {
-			this.toolCalls = toolCalls;
-		}
-
-
-
-		public enum Role {
-			@JsonProperty("system")
-			SYSTEM, @JsonProperty("user")
-			USER, @JsonProperty("assistant")
-			ASSISTANT, @JsonProperty("tool")
-			TOOL
-		}
-
-		@JsonInclude(JsonInclude.Include.NON_NULL)
-		public static class MediaContent {
-			
-			private @JsonProperty("text") String text;
-			private @JsonProperty("image") String image;
-			private @JsonProperty("video") String[] videos;
-			private @JsonProperty("fps") Float fps;
-			private @JsonProperty("audio") String audio;
-			
-			public MediaContent() {
-			}
-			
-			public MediaContent(String text, String image, String[] videos, Float fps, String audio) {
-				this.text = text;
-				this.image = image;
-				this.videos = videos;
-				this.fps = fps;
-				this.audio = audio;
-			}
-
-			public MediaContent(String text) {
-				this(text, null, null, null, null);
-			}
-
-			public String getText() {
-				return text;
-			}
-
-			public void setText(String text) {
-				this.text = text;
-			}
-
-			public String getImage() {
-				return image;
-			}
-
-			public void setImage(String image) {
-				this.image = image;
-			}
-
-			public String[] getVideos() {
-				return videos;
-			}
-
-			public void setVideos(String[] videos) {
-				this.videos = videos;
-			}
-
-			public Float getFps() {
-				return fps;
-			}
-
-			public void setFps(Float fps) {
-				this.fps = fps;
-			}
-
-			public String getAudio() {
-				return audio;
-			}
-
-			public void setAudio(String audio) {
-				this.audio = audio;
-			}
-		}
-
-		@JsonInclude(JsonInclude.Include.NON_NULL)
-		public record ToolCall(@JsonProperty("index") Integer index, @JsonProperty("id") String id,
-				@JsonProperty("type") String type, @JsonProperty("function") ChatCompletionFunction function) {
-
-			public ToolCall(String id, String type, ChatCompletionFunction function) {
-				this(null, id, type, function);
-			}
-
-		}
-
-		@JsonInclude(JsonInclude.Include.NON_NULL)
-		public static class ChatCompletionFunction {
-			
-			@JsonProperty("name")
-			private String name;
-			
-			@JsonProperty("arguments")
-			private String arguments;
-			
-			public ChatCompletionFunction() {}
-
-			public ChatCompletionFunction(String name, String arguments) {
-				super();
-				this.name = name;
-				this.arguments = arguments;
-			}
-
-			public String getName() {
-				return name;
-			}
-
-			public void setName(String name) {
-				this.name = name;
-			}
-
-			public String getArguments() {
-				return arguments;
-			}
-
-			public void setArguments(String arguments) {
-				this.arguments = arguments;
-			}
-			
-		}
-
-	}
-
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public record ChatCompletion(@JsonProperty("status_code") Integer statusCode,
-			@JsonProperty("request_id") String requestId, @JsonProperty("code") String code,
-			@JsonProperty("output") Output output, @JsonProperty("usage") Usage usage) {
-
-	}
-
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public record Output(@JsonProperty("text") String text, @JsonProperty("finish_reason") String finishReason,
-			@JsonProperty("choices") List<Choice> choices) {
-
-	}
-
-	public record Choice(@JsonProperty("finish_reason") String finishReason,
-			@JsonProperty("message") ChatCompletionMessage message) {
-	}
-
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public record Usage(@JsonProperty("total_tokens") Integer totalTokens,
-			@JsonProperty("input_tokens") Integer inputTokens, @JsonProperty("output_tokens") Integer outputTokens) {
-
-	}
-
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public static class FunctionTool {
-
-		@JsonProperty("type")
-		private Type type = Type.FUNCTION;
-
-		@JsonProperty("function")
-		private Function function;
-
-		public FunctionTool() {
-
-		}
-
-		public FunctionTool(Type type, Function function) {
-			this.type = type;
-			this.function = function;
-		}
-
-		public FunctionTool(Function function) {
-			this(Type.FUNCTION, function);
-		}
-
-		public Type getType() {
-			return type;
-		}
-
-		public void setType(Type type) {
-			this.type = type;
-		}
-
-		public Function getFunction() {
-			return function;
-		}
-
-		public void setFunction(Function function) {
-			this.function = function;
-		}
-
-		public enum Type {
-			@JsonProperty("function")
-			FUNCTION
-		}
-
-		@JsonInclude(JsonInclude.Include.NON_NULL)
-		public static class Function {
-
-			@JsonProperty("name")
-			private String name;
-
-			@JsonProperty("description")
-			private String description;
-
-			@JsonProperty("parameters")
-			private Map<String, Object> parameters;
-
-			public Function() {
-			}
-
-			public Function(String description, String name, Map<String, Object> parameters) {
-				this.description = description;
-				this.name = name;
-				this.parameters = parameters;
-			}
-
-			public Function(String description, String name, String jsonSchema) {
-				this(description, name, ModelOptionsUtils.jsonToMap(jsonSchema));
-			}
-
-			public String getName() {
-				return name;
-			}
-
-			public void setName(String name) {
-				this.name = name;
-			}
-
-			public String getDescription() {
-				return description;
-			}
-
-			public void setDescription(String description) {
-				this.description = description;
-			}
-
-			public Map<String, Object> getParameters() {
-				return parameters;
-			}
-
-			public void setParameters(Map<String, Object> parameters) {
-				this.parameters = parameters;
-			}
-
-		}
-
-	}
+//	@JsonInclude(JsonInclude.Include.NON_NULL)
+//	public record ChatCompletionRequest(@JsonProperty("input") Input input, @JsonProperty("model") String model,
+//			@JsonProperty("stream") Boolean stream, @JsonProperty("parameters") Parameters parameters) {
+//
+//		public ChatCompletionRequest(List<ChatCompletionMessage> messages, Boolean stream) {
+//			this(new Input(messages), null, stream, new Parameters());
+//		}
+//	};
+//
+//	public record Input(@JsonProperty("messages") List<ChatCompletionMessage> messages) {
+//
+//	}
+//
+//	@JsonInclude(JsonInclude.Include.NON_NULL)
+//	public static class Parameters {
+//
+//		@JsonProperty("temperature")
+//		private Float temperature;
+//
+//		@JsonProperty("seed")
+//		private Integer seed;
+//
+//		@JsonProperty("stream")
+//		private Boolean stream;
+//
+//		@JsonProperty("incremental_output")
+//		private Boolean incrementalOutput;
+//
+//		@JsonProperty("result_format")
+//		private String resultFormat = "message";
+//
+//		@JsonProperty("tool_choice")
+//		private String toolChoice = "auto";
+//
+//		@JsonProperty("tools")
+//		private List<FunctionTool> tools;
+//
+//		@JsonProperty("parallel_tool_calls")
+//		private Boolean parallelToolCalls = Boolean.TRUE;
+//
+//		public Float getTemperature() {
+//			return temperature;
+//		}
+//
+//		public void setTemperature(Float temperature) {
+//			this.temperature = temperature;
+//		}
+//
+//		public Integer getSeed() {
+//			return seed;
+//		}
+//
+//		public void setSeed(Integer seed) {
+//			this.seed = seed;
+//		}
+//
+//		public Boolean getStream() {
+//			return stream;
+//		}
+//
+//		public void setStream(Boolean stream) {
+//			this.stream = stream;
+//		}
+//
+//		public Boolean getIncrementalOutput() {
+//			return incrementalOutput;
+//		}
+//
+//		public void setIncrementalOutput(Boolean incrementalOutput) {
+//			this.incrementalOutput = incrementalOutput;
+//		}
+//
+//		public String getResultFormat() {
+//			return resultFormat;
+//		}
+//
+//		public void setResultFormat(String resultFormat) {
+//			this.resultFormat = resultFormat;
+//		}
+//
+//		public String getToolChoice() {
+//			return toolChoice;
+//		}
+//
+//		public void setToolChoice(String toolChoice) {
+//			this.toolChoice = toolChoice;
+//		}
+//
+//		public List<FunctionTool> getTools() {
+//			return tools;
+//		}
+//
+//		public void setTools(List<FunctionTool> tools) {
+//			this.tools = tools;
+//		}
+//
+//	}
+
+//	@JsonInclude(JsonInclude.Include.NON_NULL)
+//	public static class ChatCompletionMessage{
+//
+//		@JsonProperty("content") Object rawContent;
+//		@JsonProperty("role") Role role;
+//		@JsonProperty("tool_call_id") String toolCallId;
+//		@JsonProperty("reasoning_content") String reasoningContent;
+//		@JsonProperty("tool_calls") List<ToolCall> toolCalls;
+//
+//		public ChatCompletionMessage() {
+//
+//		}
+//
+//		public ChatCompletionMessage(Object content,Role role){
+//			this.rawContent = content;
+//			this.role = role;
+//		}
+//
+//		public ChatCompletionMessage(Object content,Role role,List<ToolCall> toolCalls){
+//			this.rawContent = content;
+//			this.role = role;
+//			this.toolCalls = toolCalls;
+//		}
+//
+//		public ChatCompletionMessage(Object content,Role role,String toolCallId){
+//			this.rawContent = content;
+//			this.role = role;
+//			this.toolCallId = toolCallId;
+//		}
+//
+//		public Object getContent() {
+//			if (this.rawContent == null) {
+//				return null;
+//			}
+//			if (this.rawContent instanceof String text) {
+//				return text;
+//			}
+//			//throw new IllegalStateException("The content is not a string!");
+//			return rawContent;
+//		}
+//
+//		@SuppressWarnings("unchecked")
+//		public void setContent(Object rawContent) {
+//			if(rawContent instanceof ArrayList<?> contentListValue) {
+//				this.rawContent = contentListValue.stream().map(element -> {
+//					LinkedHashMap<String, Object> map = (LinkedHashMap<String, Object>)element;
+//					MediaContent mediaContent = new MediaContent();
+//					if(!ObjectUtils.isEmpty(map.get("text"))){
+//						mediaContent.setText(ObjectUtils.getDisplayString(map.get("text")));
+//					}
+//					if(!ObjectUtils.isEmpty(map.get("image"))){
+//						mediaContent.setImage(ObjectUtils.getDisplayString(map.get("image")));
+//					}
+//					return mediaContent;
+//				}).toList();
+//			}else {
+//				this.rawContent = rawContent;
+//			}
+//		}
+//
+//		public Role getRole() {
+//			return role;
+//		}
+//
+//		public void setRole(Role role) {
+//			this.role = role;
+//		}
+//
+//		public String getToolCallId() {
+//			return toolCallId;
+//		}
+//
+//		public void setToolCallId(String toolCallId) {
+//			this.toolCallId = toolCallId;
+//		}
+//
+//		public String getReasoningContent() {
+//			return reasoningContent;
+//		}
+//
+//		public void setReasoningContent(String reasoningContent) {
+//			this.reasoningContent = reasoningContent;
+//		}
+//
+//		public List<ToolCall> getToolCalls() {
+//			return toolCalls;
+//		}
+//
+//		public void setToolCalls(List<ToolCall> toolCalls) {
+//			this.toolCalls = toolCalls;
+//		}
+//
+//
+//
+//		public enum Role {
+//			@JsonProperty("system")
+//			SYSTEM, @JsonProperty("user")
+//			USER, @JsonProperty("assistant")
+//			ASSISTANT, @JsonProperty("tool")
+//			TOOL
+//		}
+//
+//		@JsonInclude(JsonInclude.Include.NON_NULL)
+//		public static class MediaContent {
+//
+//			private @JsonProperty("text") String text;
+//			private @JsonProperty("image") String image;
+//			private @JsonProperty("video") String[] videos;
+//			private @JsonProperty("fps") Float fps;
+//			private @JsonProperty("audio") String audio;
+//
+//			public MediaContent() {
+//			}
+//
+//			public MediaContent(String text, String image, String[] videos, Float fps, String audio) {
+//				this.text = text;
+//				this.image = image;
+//				this.videos = videos;
+//				this.fps = fps;
+//				this.audio = audio;
+//			}
+//
+//			public MediaContent(String text) {
+//				this(text, null, null, null, null);
+//			}
+//
+//			public String getText() {
+//				return text;
+//			}
+//
+//			public void setText(String text) {
+//				this.text = text;
+//			}
+//
+//			public String getImage() {
+//				return image;
+//			}
+//
+//			public void setImage(String image) {
+//				this.image = image;
+//			}
+//
+//			public String[] getVideos() {
+//				return videos;
+//			}
+//
+//			public void setVideos(String[] videos) {
+//				this.videos = videos;
+//			}
+//
+//			public Float getFps() {
+//				return fps;
+//			}
+//
+//			public void setFps(Float fps) {
+//				this.fps = fps;
+//			}
+//
+//			public String getAudio() {
+//				return audio;
+//			}
+//
+//			public void setAudio(String audio) {
+//				this.audio = audio;
+//			}
+//		}
+//
+//		@JsonInclude(JsonInclude.Include.NON_NULL)
+//		public record ToolCall(@JsonProperty("index") Integer index, @JsonProperty("id") String id,
+//				@JsonProperty("type") String type, @JsonProperty("function") ChatCompletionFunction function) {
+//
+//			public ToolCall(String id, String type, ChatCompletionFunction function) {
+//				this(null, id, type, function);
+//			}
+//
+//		}
+//
+//		@JsonInclude(JsonInclude.Include.NON_NULL)
+//		public static class ChatCompletionFunction {
+//
+//			@JsonProperty("name")
+//			private String name;
+//
+//			@JsonProperty("arguments")
+//			private String arguments;
+//
+//			public ChatCompletionFunction() {}
+//
+//			public ChatCompletionFunction(String name, String arguments) {
+//				super();
+//				this.name = name;
+//				this.arguments = arguments;
+//			}
+//
+//			public String getName() {
+//				return name;
+//			}
+//
+//			public void setName(String name) {
+//				this.name = name;
+//			}
+//
+//			public String getArguments() {
+//				return arguments;
+//			}
+//
+//			public void setArguments(String arguments) {
+//				this.arguments = arguments;
+//			}
+//
+//		}
+//
+//	}
+//
+//	@JsonInclude(JsonInclude.Include.NON_NULL)
+//	public record ChatCompletion(@JsonProperty("status_code") Integer statusCode,
+//			@JsonProperty("request_id") String requestId, @JsonProperty("code") String code,
+//			@JsonProperty("output") Output output, @JsonProperty("usage") Usage usage) {
+//
+//	}
+//
+//	@JsonInclude(JsonInclude.Include.NON_NULL)
+//	public record Output(@JsonProperty("text") String text, @JsonProperty("finish_reason") String finishReason,
+//			@JsonProperty("choices") List<Choice> choices) {
+//
+//	}
+//
+//	public record Choice(@JsonProperty("finish_reason") String finishReason,
+//			@JsonProperty("message") ChatCompletionMessage message) {
+//	}
+//
+//	@JsonInclude(JsonInclude.Include.NON_NULL)
+//	public record Usage(@JsonProperty("total_tokens") Integer totalTokens,
+//			@JsonProperty("input_tokens") Integer inputTokens, @JsonProperty("output_tokens") Integer outputTokens) {
+//
+//	}
+//
+//	@JsonInclude(JsonInclude.Include.NON_NULL)
+//	public static class FunctionTool {
+//
+//		@JsonProperty("type")
+//		private Type type = Type.FUNCTION;
+//
+//		@JsonProperty("function")
+//		private Function function;
+//
+//		public FunctionTool() {
+//
+//		}
+//
+//		public FunctionTool(Type type, Function function) {
+//			this.type = type;
+//			this.function = function;
+//		}
+//
+//		public FunctionTool(Function function) {
+//			this(Type.FUNCTION, function);
+//		}
+//
+//		public Type getType() {
+//			return type;
+//		}
+//
+//		public void setType(Type type) {
+//			this.type = type;
+//		}
+//
+//		public Function getFunction() {
+//			return function;
+//		}
+//
+//		public void setFunction(Function function) {
+//			this.function = function;
+//		}
+//
+//		public enum Type {
+//			@JsonProperty("function")
+//			FUNCTION
+//		}
+//
+//		@JsonInclude(JsonInclude.Include.NON_NULL)
+//		public static class Function {
+//
+//			@JsonProperty("name")
+//			private String name;
+//
+//			@JsonProperty("description")
+//			private String description;
+//
+//			@JsonProperty("parameters")
+//			private Map<String, Object> parameters;
+//
+//			public Function() {
+//			}
+//
+//			public Function(String description, String name, Map<String, Object> parameters) {
+//				this.description = description;
+//				this.name = name;
+//				this.parameters = parameters;
+//			}
+//
+//			public Function(String description, String name, String jsonSchema) {
+//				this(description, name, ModelOptionsUtils.jsonToMap(jsonSchema));
+//			}
+//
+//			public String getName() {
+//				return name;
+//			}
+//
+//			public void setName(String name) {
+//				this.name = name;
+//			}
+//
+//			public String getDescription() {
+//				return description;
+//			}
+//
+//			public void setDescription(String description) {
+//				this.description = description;
+//			}
+//
+//			public Map<String, Object> getParameters() {
+//				return parameters;
+//			}
+//
+//			public void setParameters(Map<String, Object> parameters) {
+//				this.parameters = parameters;
+//			}
+//
+//		}
+//
+//	}
 
 	public static class Builder {
 		private String baseUrl = "https://dashscope.aliyuncs.com";

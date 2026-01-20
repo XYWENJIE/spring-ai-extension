@@ -82,7 +82,13 @@ public class DashScopeResponse {
 	}
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-	public class Output {
+	public static class Output {
+    	
+    	@JsonProperty("code")
+    	private String code;
+    	
+    	@JsonProperty("message")
+    	private String message;
     	
     	@JsonProperty("text")
     	private String text;
@@ -91,7 +97,7 @@ public class DashScopeResponse {
     	private String finishReason;
     	
     	@JsonProperty("choices")
-    	private String choices;
+    	private List<Choice> choices;
 
         @JsonProperty("task_id")
         private String taskId;
@@ -122,6 +128,28 @@ public class DashScopeResponse {
         
         @JsonProperty("embeddings")
         private List<Embedding> embeddings;
+        
+        @JsonProperty("results")
+        private List<Result> results;
+        
+        @JsonProperty("task_metrics")
+        private TaskMetrics taskMetrics;
+        
+        public String getCode() {
+			return code;
+		}
+        
+        public void setCode(String code) {
+			this.code = code;
+		}
+        
+        public String getMessage() {
+			return message;
+		}
+        
+        public void setMessage(String message) {
+			this.message = message;
+		}
 
 		public String getText() {
 			return text;
@@ -139,11 +167,11 @@ public class DashScopeResponse {
 			this.finishReason = finishReason;
 		}
 
-		public String getChoices() {
+		public List<Choice> getChoices() {
 			return choices;
 		}
 
-		public void setChoices(String choices) {
+		public void setChoices(List<Choice> choices) {
 			this.choices = choices;
 		}
 
@@ -223,11 +251,138 @@ public class DashScopeResponse {
         public void setEmbeddings(List<Embedding> embeddings) {
 			this.embeddings = embeddings;
 		}
+        
+        public List<Result> getResults() {
+			return results;
+		}
+        
+        public void setResults(List<Result> results) {
+			this.results = results;
+		}
+        
+        public TaskMetrics getTaskMetrics() {
+			return taskMetrics;
+		}
+        
+        public void setTaskMetrics(TaskMetrics taskMetrics) {
+			this.taskMetrics = taskMetrics;
+		}
 
     }
+    
+    @JsonInclude(Include.NON_NULL)
+    public static class Result{
+    	
+    	@JsonProperty("orig_prompt")
+    	private String origPrompt;
+    	
+    	@JsonProperty("actual_prompt")
+    	private String actualPrompt;
+    	
+    	@JsonProperty("url")
+    	private String url;
+
+		public String getOrigPrompt() {
+			return origPrompt;
+		}
+
+		public void setOrigPrompt(String origPrompt) {
+			this.origPrompt = origPrompt;
+		}
+
+		public String getActualPrompt() {
+			return actualPrompt;
+		}
+
+		public void setActualPrompt(String actualPrompt) {
+			this.actualPrompt = actualPrompt;
+		}
+
+		public String getUrl() {
+			return url;
+		}
+
+		public void setUrl(String url) {
+			this.url = url;
+		}
+    }
+    
+    @JsonInclude(Include.NON_NULL)
+    public static class TaskMetrics{
+    	
+    	@JsonProperty("TOTAL")
+    	private Integer total;
+    	
+    	@JsonProperty("SUCCEEDED")
+    	private Integer succeeded;
+    	
+    	@JsonProperty("FAILED")
+    	private Integer failed;
+
+		public Integer getTotal() {
+			return total;
+		}
+
+		public void setTotal(Integer total) {
+			this.total = total;
+		}
+
+		public Integer getSucceeded() {
+			return succeeded;
+		}
+
+		public void setSucceeded(Integer succeeded) {
+			this.succeeded = succeeded;
+		}
+
+		public Integer getFailed() {
+			return failed;
+		}
+
+		public void setFailed(Integer failed) {
+			this.failed = failed;
+		}
+    }
+
+	@JsonInclude(Include.NON_NULL)
+	public static class Choice{
+
+		@JsonProperty("finish_reason ")
+		private String finishReason;
+
+		@JsonProperty("message")
+		private Object message;
+
+		@JsonProperty("logprobs")
+		private Object logprobs;
+
+		public String getFinishReason() {
+			return finishReason;
+		}
+
+		public void setFinishReason(String finishReason) {
+			this.finishReason = finishReason;
+		}
+
+		public Object getMessage() {
+			return message;
+		}
+
+		public void setMessage(Object message) {
+			this.message = message;
+		}
+
+		public Object getLogprobs() {
+			return logprobs;
+		}
+
+		public void setLogprobs(Object logprobs) {
+			this.logprobs = logprobs;
+		}
+	}
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    public class Usage {
+    public static class Usage {
     	
     	//输入文本的 Token 消耗量。对于通义千问3-TTS-Flash模型，该字段固定为0
     	@JsonProperty("input_tokens")
@@ -264,6 +419,9 @@ public class DashScopeResponse {
         
         @JsonProperty("total_tokens")
         private Integer totalTokens;
+        
+        @JsonProperty("image_count")
+        private Integer imageCount;
 
 		public Integer getInputTokens() {
 			return inputTokens;
@@ -351,6 +509,14 @@ public class DashScopeResponse {
 		
 		public void setTotalTokens(Integer totalTokens) {
 			this.totalTokens = totalTokens;
+		}
+		
+		public Integer getImageCount() {
+			return imageCount;
+		}
+		
+		public void setImageCount(Integer imageCount) {
+			this.imageCount = imageCount;
 		}
         
     }

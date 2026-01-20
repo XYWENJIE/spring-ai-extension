@@ -36,14 +36,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.*;
 import org.xywenjie.spring.ai.dashscope.api.DashScopeApi;
-import org.xywenjie.spring.ai.dashscope.api.DashScopeApi.ChatCompletion;
-import org.xywenjie.spring.ai.dashscope.api.DashScopeApi.ChatCompletionMessage;
-import org.xywenjie.spring.ai.dashscope.api.DashScopeApi.ChatCompletionRequest;
-import org.xywenjie.spring.ai.dashscope.api.DashScopeApi.Choice;
-import org.xywenjie.spring.ai.dashscope.api.DashScopeApi.ChatCompletionMessage.ChatCompletionFunction;
-import org.xywenjie.spring.ai.dashscope.api.DashScopeApi.ChatCompletionMessage.MediaContent;
-import org.xywenjie.spring.ai.dashscope.api.DashScopeApi.ChatCompletionMessage.Role;
-import org.xywenjie.spring.ai.dashscope.api.DashScopeApi.ChatCompletionMessage.ToolCall;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -179,7 +171,7 @@ public class DashScopeChatModel implements ChatModel {
 
     public Flux<ChatResponse> internalStream(Prompt prompt, ChatResponse previousChatResponse) {
         return Flux.deferContextual(contentView -> {
-            ChatCompletionRequest request = createRequest(prompt, true);
+            DashScopeRequest request = createRequest(prompt, true);
             request.parameters().setIncrementalOutput(Boolean.TRUE);
             Flux<DashScopeApi.ChatCompletion> completionChunks = this.dashScopeApi.chatCompletionStream(request,
                     getAdditionalHttpHeaders(prompt));
@@ -386,7 +378,7 @@ public class DashScopeChatModel implements ChatModel {
                 Object content = message.getText();
                 if (message instanceof UserMessage userMessage) {
                     if (!CollectionUtils.isEmpty(userMessage.getMedia())) {
-                        List<MediaContent> contentList = new ArrayList<>(List.of(new MediaContent(message.getText())));
+                        List<DashScopeRequest.MediaContent> contentList = new ArrayList<>(List.of(new DashScopeRequest.MediaContent(message.getText())));
                         contentList.addAll(userMessage.getMedia().stream().map(this::mapToMediaContent).toList());
                         content = contentList;
                     }
@@ -402,13 +394,13 @@ public class DashScopeChatModel implements ChatModel {
                     }).toList();
                 }
                 // TODO
-                return List.of(DashScopeRequest.Message.builder().content(message.getText()).role("").build());
-                return List.of(new ChatCompletionMessage(message.getText(), Role.ASSISTANT,toolCalls));
+                return List.of(DashScopeRequest.Message.builder().content(message.getText()).role(Role.ASSISTANT.name()).build());
+                //return List.of(new ChatCompletionMessage(message.getText(), Role.ASSISTANT,toolCalls));
             } else if (message.getMessageType() == MessageType.TOOL) {
                 ToolResponseMessage toolMessage = (ToolResponseMessage) message;
                 toolMessage.getResponses().forEach(
                         response -> Assert.isTrue(response.id() != null, "ToolResponseMessage must have an id"));
-                return toolMessage.getResponses().stream().map(tr -> new ChatCompletionMessage(tr.responseData(), Role.TOOL,tr.id())).toList();
+                return toolMessage.getResponses().stream().map(tr -> new DashScopeRequest.Message(tr.responseData(), Role.TOOL,tr.id())).toList();
             } else {
                 throw new IllegalArgumentException("Unsupported message type: " + message.getMessageType());
             }
@@ -436,15 +428,15 @@ public class DashScopeChatModel implements ChatModel {
      * @param media
      * @return
      */
-    private MediaContent mapToMediaContent(Media media) {
+    private DashScopeRequest.MediaContent mapToMediaContent(Media media) {
         var mimeType = media.getMimeType();
         if (MimeTypeUtils.parseMimeType("audio/mp3").equals(mimeType)) {
-            return new MediaContent(null, null, null, null, this.fromAudioData(media.getData()));
+            return DashScopeRequest.MediaContent.builder().audio(this.fromAudioData(media.getData())).build();
         }
         if (MimeTypeUtils.parseMimeType("audio/wav").equals(mimeType)) {
-            return new MediaContent(null, null, null, null, this.fromAudioData(media.getData()));
+            return DashScopeRequest.MediaContent.builder().audio(this.fromAudioData(media.getData())).build();
         } else {
-            return new MediaContent(null, this.fromMediaData(media.getMimeType(), media.getData()), null, null, null);
+            return DashScopeRequest.MediaContent.builder().image(this.fromMediaData(media.getMimeType(),media.getData())).build();
         }
     }
 

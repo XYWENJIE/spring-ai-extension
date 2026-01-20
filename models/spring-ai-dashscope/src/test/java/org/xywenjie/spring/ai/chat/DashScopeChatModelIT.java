@@ -1,6 +1,9 @@
 package org.xywenjie.spring.ai.chat;
 
 import static org.assertj.core.api.Assertions.assertThat;
+
+import java.io.IOException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -24,12 +27,14 @@ import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.prompt.SystemPromptTemplate;
+import org.springframework.ai.content.Media;
 import org.springframework.ai.dashscope.DashScopeTestConfiguration;
 import org.springframework.ai.dashscope.testutils.AbstractIT;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
+import org.springframework.util.MimeTypeUtils;
 import org.xywenjie.spring.ai.dashscope.DashScopeChatOptions;
 import reactor.core.publisher.Flux;
 
@@ -257,13 +262,78 @@ public class DashScopeChatModelIT extends AbstractIT {
 
     @ParameterizedTest(name = "{0} : {displayName} ")
     @ValueSource(strings = {"qwen-vl-max"})
-    void multiModalityEmbeddedImage(String modelName){
+    void multiModalityEmbeddedImage(String modelName) throws IOException {
         var imageData = new ClassPathResource("/test.png");
-        //var userMessage = new UserMessage("Explain what do you see on this picture?",List.of(Media.builder().mimeType(MimeTypeUtils.IMAGE_PNG).data(imageData).build()));
-        logger.info(modelName);
-        //var response = this.chatModel.call(new Prompt(List.of(userMessage),DashScopeChatOptions.builder().model(modelName).build()));
+        var userMessage = UserMessage.builder()
+                .text("Explain what do you see on this picture?")
+                .media(List.of(new Media(MimeTypeUtils.IMAGE_PNG,imageData)))
+                .build();
 
-        //assertThat(response.getResult().getOutput().getText()).contains("bananas","apple","bowl");
+        var response = this.chatModel
+                .call(new Prompt(List.of(userMessage),DashScopeChatOptions.builder().model(modelName).build()));
+        logger.info(response.getResult().getOutput().getText());
+        assertThat(response.getResult().getOutput().getText()).containsAnyOf("bananas","apple","bowl","basket","fruit stand");
+    }
+
+    @ParameterizedTest(name = "{0}:{displayName}")
+    @ValueSource(strings = {"qwen-vl-max"})
+    void multiModalityImageUrl(String modelName) throws IOException {
+        var userMessage = UserMessage.builder()
+                .text("Explain what do you see on this picture?")
+                .media(List.of(Media.builder()
+                        .mimeType(MimeTypeUtils.IMAGE_PNG)
+                        .data(URI.create("https://docs.spring.io/spring-ai/reference/_images/multimodal.test.png"))
+                        .build()))
+                .build();
+
+        ChatResponse response = this.chatModel
+                .call(new Prompt(List.of(userMessage),DashScopeChatOptions.builder().model(modelName).build()));
+
+        logger.info(response.getResult().getOutput().getText());
+        assertThat(response.getResult().getOutput().getText()).containsAnyOf("bananas","apple", "bowl", "basket",
+                "fruit stand");
+    }
+
+    @Test
+    void streamingMultiModalityImageUrl() throws IOException {
+        var userMessage = UserMessage.builder()
+                .text("Explain what do you see on this picture?")
+                .media(List.of(Media.builder()
+                        .mimeType(MimeTypeUtils.IMAGE_PNG)
+                        .data(URI.create("https://docs.spring.io/spring-ai/reference/_images/multimodal.test.png"))
+                        .build()))
+                .build();
+
+        Flux<ChatResponse> response = this.streamingChatModel.stream(new Prompt(List.of(userMessage),
+                DashScopeChatOptions.builder().model("qwen-vl-max").build()));
+
+        String content = response.collectList()
+                .block()
+                .stream()
+                .map(ChatResponse::getResults)
+                .flatMap(List::stream)
+                .map(Generation::getOutput)
+                .map(AssistantMessage::getText)
+                .collect(Collectors.joining());
+        logger.info("Response: {}",content);
+        assertThat(content).containsAnyOf("bananas", "apple", "bowl", "basket", "fruit stand");
+    }
+
+    @ParameterizedTest(name = "{0}:{displayName}")
+    @ValueSource(strings = {"qwen3-omni-flash"})
+    void multiModalityOutputAudio(String modelName) throws IOException {
+        var userMessage = new UserMessage("Tell me joke about Spring Framework");
+
+        ChatResponse response = this.chatModel.call(new Prompt(List.of(userMessage),
+                DashScopeChatOptions.builder()
+                        .model(modelName)
+                        .build()));
+
+        logger.info(response.getResult().getOutput().getText());
+        assertThat(response.getResult().getOutput().getText()).isNotEmpty();
+
+        byte[] audio = response.getResult().getOutput().getMedia().get(0).getDataAsByteArray();
+        assertThat(audio).isNotEmpty();
     }
 
 }

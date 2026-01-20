@@ -8,6 +8,7 @@ import org.springframework.ai.model.tool.ToolCallingChatOptions;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.util.Assert;
 import org.xywenjie.spring.ai.dashscope.api.DashScopeApi;
+import org.xywenjie.spring.ai.dashscope.api.dto.DashScopeRequest;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -19,7 +20,7 @@ public class DashScopeChatOptions implements ToolCallingChatOptions{
 	private @JsonProperty("model") String model;
 	
 	@JsonProperty("parameters")
-	private DashScopeApi.Parameters parameters = new DashScopeApi.Parameters();
+	private DashScopeRequest.Parameters parameters = new DashScopeRequest.Parameters();
 	
 	@JsonIgnore
 	private Map<String,String> httpHeaders = new HashMap<>();
@@ -143,11 +144,11 @@ public class DashScopeChatOptions implements ToolCallingChatOptions{
 		
 	}
 	
-	public DashScopeApi.Parameters getParameters() {
+	public DashScopeRequest.Parameters getParameters() {
 		return parameters;
 	}
 
-	public void setParameters(DashScopeApi.Parameters parameters) {
+	public void setParameters(DashScopeRequest.Parameters parameters) {
 		this.parameters = parameters;
 	}
 	
@@ -169,7 +170,10 @@ public class DashScopeChatOptions implements ToolCallingChatOptions{
 		}
 
 		public Builder maxTokens(Integer maxTokens){
-			if(maxTokens != null && this.options.parameters.)
+			if(maxTokens != null && this.options.parameters == null) {
+				
+			}
+			return this;
 		}
 
 		public Builder toolCallbacks(List<ToolCallback> toolCallbacks){

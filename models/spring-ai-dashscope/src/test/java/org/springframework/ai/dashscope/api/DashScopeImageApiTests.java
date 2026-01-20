@@ -1,6 +1,5 @@
 package org.springframework.ai.dashscope.api;
 
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,7 +7,6 @@ import org.springframework.http.HttpEntity;
 import org.xywenjie.spring.ai.dashscope.api.DashScopeApi;
 import org.xywenjie.spring.ai.dashscope.api.DashScopeImageApi;
 import org.xywenjie.spring.ai.dashscope.api.DashScopeVideoApi;
-import org.xywenjie.spring.ai.dashscope.api.DashScopeApi.ChatCompletionRequest;
 import org.xywenjie.spring.ai.dashscope.api.dto.DashScopeRequest;
 import org.xywenjie.spring.ai.dashscope.api.dto.DashScopeResponse;
 import org.xywenjie.spring.ai.dashscope.api.dto.DashScopeRequest.Resolution;
@@ -27,7 +25,7 @@ public class DashScopeImageApiTests {
 
     //@Test
     public void submit(){
-        ChatCompletionRequest chatCompletionRequest = new ChatCompletionRequest(null, false);
+    	DashScopeRequest chatCompletionRequest = new DashScopeRequest();
         dashScopeApi.chatCompletionEntity(chatCompletionRequest);
     }
 

@@ -78,11 +78,11 @@ public class DashScopeRequest {
         this.parameters = parameters;
     }
 
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-	/**
+    /**
      * Input class containing the input parameters for the request
      */
-    public class Input{
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public static class Input{
     	
     	@JsonProperty("text")
     	private String text;
@@ -98,6 +98,9 @@ public class DashScopeRequest {
 
         @JsonProperty("prompt")
         private String prompt;
+
+        @JsonProperty("negative_prompt")
+        private String negativePrompt;
 
         @JsonProperty("ref_images_url")
         private List<String> refImagesUrl;
@@ -179,6 +182,14 @@ public class DashScopeRequest {
          */
         public void setPrompt(String prompt) {
             this.prompt = prompt;
+        }
+
+        public String getNegativePrompt() {
+            return negativePrompt;
+        }
+
+        public void setNegativePrompt(String negativePrompt) {
+            this.negativePrompt = negativePrompt;
         }
 
         /**
@@ -300,6 +311,30 @@ public class DashScopeRequest {
         public void setTexts(List<String> texts) {
 			this.texts = texts;
 		}
+
+        public static Builder builder(){
+            return new Builder();
+        }
+
+        public static class Builder{
+
+            private Input input = new Input();
+
+            public Builder prompt(String prompt){
+                this.input.setPrompt(prompt);
+                return this;
+            }
+
+            public Builder negativePrompt(String negativePrompt){
+                this.input.setNegativePrompt(negativePrompt);
+                return this;
+            }
+
+            public Input build(){
+                return input;
+            }
+        }
+        
     }
 
     /**
@@ -312,7 +347,10 @@ public class DashScopeRequest {
         private String role;
 
         @JsonProperty("content")
-        private String content;
+        private Object content;
+
+        @JsonProperty("tool_call_id")
+        private String toolCallId;
 
         /**
          * Get the role of the message
@@ -334,7 +372,7 @@ public class DashScopeRequest {
          * Get the content of the message
          * @return The content string
          */
-        public String getContent() {
+        public Object getContent() {
             return content;
         }
 
@@ -342,8 +380,16 @@ public class DashScopeRequest {
          * Set the content of the message
          * @param content The content string
          */
-        public void setContent(String content) {
+        public void setContent(Object content) {
             this.content = content;
+        }
+
+        public String getToolCallId() {
+            return toolCallId;
+        }
+
+        public void setToolCallId(String toolCallId) {
+            this.toolCallId = toolCallId;
         }
 
         public static Builder builder(){
@@ -366,6 +412,143 @@ public class DashScopeRequest {
 
             public Message build(){
                 return messageRequest;
+            }
+        }
+    }
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public static class MediaContent{
+
+        @JsonProperty("text")
+        private String text;
+
+        @JsonProperty("image")
+        private String image;
+
+        @JsonProperty("video")
+        private String video;
+
+        @JsonProperty("fps")
+        private Float fps;
+
+        @JsonProperty("min_pixels")
+        private Integer minPixels;
+
+        @JsonProperty("max_pixels")
+        private Integer maxPixels;
+
+        @JsonProperty("total_pixels")
+        private Integer totalPixels;
+
+        @JsonProperty("audio")
+        private String audio;
+
+        @JsonProperty("cache_control")
+        private Object cacheControl;
+
+        public String getText() {
+            return text;
+        }
+
+        public void setText(String text) {
+            this.text = text;
+        }
+
+        public String getImage() {
+            return image;
+        }
+
+        public void setImage(String image) {
+            this.image = image;
+        }
+
+        public String getVideo() {
+            return video;
+        }
+
+        public void setVideo(String video) {
+            this.video = video;
+        }
+
+        public Float getFps() {
+            return fps;
+        }
+
+        public void setFps(Float fps) {
+            this.fps = fps;
+        }
+
+        public Integer getMinPixels() {
+            return minPixels;
+        }
+
+        public void setMinPixels(Integer minPixels) {
+            this.minPixels = minPixels;
+        }
+
+        public Integer getMaxPixels() {
+            return maxPixels;
+        }
+
+        public void setMaxPixels(Integer maxPixels) {
+            this.maxPixels = maxPixels;
+        }
+
+        public Integer getTotalPixels() {
+            return totalPixels;
+        }
+
+        public void setTotalPixels(Integer totalPixels) {
+            this.totalPixels = totalPixels;
+        }
+
+        public String getAudio() {
+            return audio;
+        }
+
+        public void setAudio(String audio) {
+            this.audio = audio;
+        }
+
+        public Object getCacheControl() {
+            return cacheControl;
+        }
+
+        public void setCacheControl(Object cacheControl) {
+            this.cacheControl = cacheControl;
+        }
+
+        public MediaContent() {
+        }
+
+        public MediaContent(String text) {
+            this.text = text;
+        }
+
+        public static Builder builder(){
+            return new Builder();
+        }
+
+        public static class Builder{
+            private MediaContent mediaContent = new MediaContent();
+
+            public Builder text(String text){
+                mediaContent.text = text;
+                return this;
+            }
+
+            public Builder audio(String audio){
+                mediaContent.audio = audio;
+                return this;
+            }
+
+            public Builder image(String image){
+                mediaContent.image = image;
+                return this;
+            }
+
+            public MediaContent build(){
+                return mediaContent;
             }
         }
     }
@@ -421,9 +604,21 @@ public class DashScopeRequest {
     /**
      * Parameters class containing the parameters for the request
      */
-    public class Parameters{
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public static class Parameters{
 
-        
+        @JsonProperty("size")
+        private String size;
+
+        @JsonProperty("n")
+        private Integer n;
+
+        @JsonProperty("watermark")
+        private Boolean watermark;
+
+        @JsonProperty("seed")
+        private Integer seed;
+
         @JsonProperty("resolution")
         private Resolution resolution;
 
@@ -453,6 +648,41 @@ public class DashScopeRequest {
 
         @JsonProperty("thinking_budget")
         private String thinkingBudget;
+
+        @JsonProperty("tools")
+        private List<FunctionTool> tools;
+
+        public String getSize() {
+            return size;
+        }
+
+        public void setSize(String size) {
+            this.size = size;
+        }
+
+        public Integer getN() {
+            return n;
+        }
+
+        public void setN(Integer n) {
+            this.n = n;
+        }
+
+        public Boolean getWatermark() {
+            return watermark;
+        }
+
+        public void setWatermark(Boolean watermark) {
+            this.watermark = watermark;
+        }
+
+        public Integer getSeed() {
+            return seed;
+        }
+
+        public void setSeed(Integer seed) {
+            this.seed = seed;
+        }
 
         /**
          * Get the resolution for this request
@@ -613,6 +843,115 @@ public class DashScopeRequest {
         public void setThinkingBudget(String thinkingBudget) {
             this.thinkingBudget = thinkingBudget;
         }
+
+        public List<FunctionTool> getTools() {
+            return tools;
+        }
+
+        public void setTools(List<FunctionTool> tools) {
+            this.tools = tools;
+        }
+
+        public static Builder builder(){
+            return new Builder();
+        }
+
+        public static class Builder{
+
+            private final Parameters parameters = new Parameters();
+
+            public Builder size(String size){
+                parameters.setSize(size);
+                return this;
+            }
+
+            public Builder n(Integer n){
+                this.parameters.setN(n);
+                return this;
+            }
+
+            public Builder promptExtend(Boolean promptExtend){
+                this.parameters.setPromptExtend(promptExtend);
+                return this;
+            }
+
+            public Builder watermark(Boolean watermark){
+                this.parameters.setWatermark(watermark);
+                return this;
+            }
+
+            public Builder seed(Integer seed){
+                this.parameters.setSeed(seed);
+                return this;
+            }
+
+            public Parameters build(){
+                return parameters;
+            }
+        }
+    }
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public static class FunctionTool{
+
+        @JsonProperty("type")
+        private String type = "function";
+
+        @JsonProperty("function")
+        private Function function;
+
+        public String getType() {
+            return type;
+        }
+
+        public void setType(String type) {
+            this.type = type;
+        }
+
+        public Function getFunction() {
+            return function;
+        }
+
+        public void setFunction(Function function) {
+            this.function = function;
+        }
+    }
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public static class Function{
+
+        @JsonProperty("name")
+        private String name;
+
+        @JsonProperty("description")
+        private String description;
+
+        @JsonProperty("parameters")
+        private String parameters;
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public void setDescription(String description) {
+            this.description = description;
+        }
+
+        public String getParameters() {
+            return parameters;
+        }
+
+        public void setParameters(String parameters) {
+            this.parameters = parameters;
+        }
     }
 
 
@@ -627,6 +966,16 @@ public class DashScopeRequest {
 
         public Builder model(String model) {
             instance.setModel(model);
+            return this;
+        }
+
+        public Builder input(Input input){
+            instance.setInput(input);
+            return this;
+        }
+
+        public Builder parameters(Parameters parameters){
+            instance.setParameters(parameters);
             return this;
         }
         
