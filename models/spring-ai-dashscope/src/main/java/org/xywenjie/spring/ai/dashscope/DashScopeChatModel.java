@@ -42,6 +42,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationRegistry;
 import io.micrometer.observation.contextpropagation.ObservationThreadLocalAccessor;
+import org.xywenjie.spring.ai.dashscope.api.dto.DashScopeDefinition;
 import org.xywenjie.spring.ai.dashscope.api.dto.DashScopeRequest;
 import org.xywenjie.spring.ai.dashscope.api.dto.DashScopeResponse;
 import reactor.core.publisher.Flux;
@@ -114,7 +115,7 @@ public class DashScopeChatModel implements ChatModel {
                 .observation(this.observationConvention, DEFAULT_OBSERVATION_CONVENTION, () -> observationContext,
                         this.observationRegistry)
                 .observe(() -> {
-                    ResponseEntity<ChatCompletion> completionEntity = RetryUtils.execute(this.retryTemplate,
+                    ResponseEntity<DashScopeResponse> completionEntity = RetryUtils.execute(this.retryTemplate,
                             () -> this.dashScopeApi.chatCompletionEntity(request, getAdditionalHttpHeaders(prompt)));
                     var chatCompletion = completionEntity.getBody();
 
@@ -122,7 +123,7 @@ public class DashScopeChatModel implements ChatModel {
                         logger.warn("No chat completion returned for prompt: {}", prompt);
                         return new ChatResponse(List.of());
                     }
-                    List<Choice> choices = chatCompletion.output().choices();
+                    List<DashScopeResponse.Choice> choices = chatCompletion.getOutput().getChoices();
                     if (choices == null) {
                         logger.warn("No choices returned for prompt: {}", prompt);
                         return new ChatResponse(List.of());
@@ -130,16 +131,16 @@ public class DashScopeChatModel implements ChatModel {
                     List<Generation> generations = choices.stream().map(choice -> {
                     	
                         Map<String, Object> metadata = Map.of(
-                                "id", chatCompletion.requestId(),
-                                "role",choice.message().getRole() != null ? choice.message().getRole().name() : "",
-                                "finishReason",choice.finishReason());
+                                "id", chatCompletion.getRequestId(),
+                                "role",choice.getMessage().getRole() != null ? choice.getMessage().getRole() : "",
+                                "finishReason",choice.getFinishReason());
                         return buildGeneration(choice, metadata, request);
                     }).toList();
 
                     //RateLimit rateLimit = OpenAiResponseHeaderExtractor.extractAiResponseHeaders(completionEntity);
 
                     // Current usage
-                    DashScopeApi.Usage usage = chatCompletion.usage();
+                    DashScopeResponse.Usage usage = chatCompletion.getUsage();
                     Usage currentChatResponseUsage = usage != null ? getDefaultUsage(usage) : new EmptyUsage();
                     Usage accumulatedUsage = UsageCalculator.getCumulativeUsage(currentChatResponseUsage,
                             previousChatResponse);
@@ -172,8 +173,8 @@ public class DashScopeChatModel implements ChatModel {
     public Flux<ChatResponse> internalStream(Prompt prompt, ChatResponse previousChatResponse) {
         return Flux.deferContextual(contentView -> {
             DashScopeRequest request = createRequest(prompt, true);
-            request.parameters().setIncrementalOutput(Boolean.TRUE);
-            Flux<DashScopeApi.ChatCompletion> completionChunks = this.dashScopeApi.chatCompletionStream(request,
+            request.getParameters().setIncrementalOutput(Boolean.TRUE);
+            Flux<DashScopeResponse> completionChunks = this.dashScopeApi.chatCompletionStream(request,
                     getAdditionalHttpHeaders(prompt));
 
             ConcurrentHashMap<String, String> roleMap = new ConcurrentHashMap<>();
@@ -188,43 +189,43 @@ public class DashScopeChatModel implements ChatModel {
                     this.observationRegistry);
 
             observation.parentObservation(contentView.getOrDefault(ObservationThreadLocalAccessor.KEY,null)).start();
-            Map<Integer,ToolCall> toolCallMap = new HashMap<>();
+            Map<Integer,DashScopeResponse.ToolCall> toolCallMap = new HashMap<>();
             Flux<ChatResponse> chatResponse = completionChunks.switchMap(chatCompletion -> Mono.just(chatCompletion).map(chatCompletion2 -> {
                 //logger.info("Flux响应内容：{}",ModelOptionsUtils.toJsonString(chatCompletion2));
                 try {
-                    String id = chatCompletion2.requestId();
-                    List<Generation> generations = chatCompletion2.output().choices().stream().map(choice -> {
-                    	if(choice.message().getToolCalls() != null) {
-                    		for(ToolCall toolCalll : choice.message().getToolCalls()) {
-                        		toolCallMap.compute(toolCalll.index(), (key,existing) -> {
+                    String id = chatCompletion2.getRequestId();
+                    List<Generation> generations = chatCompletion2.getOutput().getChoices().stream().map(choice -> {
+                    	if(choice.getMessage().getToolCalls() != null) {
+                    		for(DashScopeResponse.ToolCall toolCalll : choice.getMessage().getToolCalls()) {
+                        		toolCallMap.compute(toolCalll.getIndex(), (key,existing) -> {
                         			if(existing == null) {
-                        				return new ToolCall(toolCalll.index(),toolCalll.type(),toolCalll.id(),toolCalll.function());
+                        				return new DashScopeResponse.ToolCall(toolCalll.getIndex(),toolCalll.getType(),toolCalll.getId(),toolCalll.getFunction());
                         			}else {
-                                        if(StringUtils.hasText(toolCalll.function().getArguments())){
-                                            existing.function().setArguments(existing.function().getArguments() + toolCalll.function().getArguments());
+                                        if(StringUtils.hasText(toolCalll.getFunction().getArguments())){
+                                            existing.getFunction().setArguments(existing.getFunction().getArguments() + toolCalll.getFunction().getArguments());
                                         }
                         				return existing;
                         			}
                         		});
                         	}
                     	}
-                        if (choice.message().getRole() != null) {
-                            roleMap.putIfAbsent(id, choice.message().getRole().name());
+                        if (choice.getMessage().getRole() != null) {
+                            roleMap.putIfAbsent(id, choice.getMessage().getRole());
                         }
                         Map<String, Object> metadata = Map.of(
-                                "id",chatCompletion2.requestId(),
-                                "finishReason",choice.finishReason() != null ? choice.finishReason() : "");
-                        if(choice.finishReason().equals("tool_calls")) {
-                        	List<ToolCall> accumulatedToolCalls = toolCallMap.values().stream().toList();
-                        	choice.message().setToolCalls(accumulatedToolCalls);
+                                "id",chatCompletion2.getRequestId(),
+                                "finishReason",choice.getFinishReason() != null ? choice.getFinishReason() : "");
+                        if(choice.getFinishReason().equals("tool_calls")) {
+                        	List<DashScopeResponse.ToolCall> accumulatedToolCalls = toolCallMap.values().stream().toList();
+                        	choice.getMessage().setToolCalls(accumulatedToolCalls);
                         	return buildGeneration(choice, metadata, request);
                         }else {
-                        	choice.message().setToolCalls(null);
+                        	choice.getMessage().setToolCalls(null);
                         	return buildGeneration(choice,metadata,request);
                         }
                         
                     }).toList();
-                    DashScopeApi.Usage usage = chatCompletion2.usage();
+                    DashScopeResponse.Usage usage = chatCompletion2.getUsage();
                     Usage currentChatResponseUsage = usage != null ? getDefaultUsage(usage) : new EmptyUsage();
                     Usage accumulatedUsage = UsageCalculator.getCumulativeUsage(currentChatResponseUsage,
                             previousChatResponse);
@@ -284,30 +285,30 @@ public class DashScopeChatModel implements ChatModel {
         return httpHeaders;
     }
 
-    private Generation buildGeneration(Choice choice, Map<String, Object> metadata, ChatCompletionRequest chatRequest) {
+    private Generation buildGeneration(DashScopeResponse.Choice choice, Map<String, Object> metadata, DashScopeRequest chatRequest) {
         // List<AssistantMessage.ToolCall> toolCalls = choice.message();
-        List<AssistantMessage.ToolCall> toolCalls = choice.message().getToolCalls() == null ? List.of()
-                : choice.message()
+        List<AssistantMessage.ToolCall> toolCalls = choice.getMessage().getToolCalls() == null ? List.of()
+                : choice.getMessage()
                 .getToolCalls()
                 .stream()
-                .map(toolCall -> new AssistantMessage.ToolCall(toolCall.id(),"function",toolCall.function().getName(),toolCall.function().getArguments())).toList();
-        String finishReason = (choice.finishReason() != null ? choice.finishReason() : "");
+                .map(toolCall -> new AssistantMessage.ToolCall(toolCall.getId(),"function",toolCall.getFunction().getName(),toolCall.getFunction().getArguments())).toList();
+        String finishReason = (choice.getFinishReason() != null ? choice.getFinishReason() : "");
         var generationMetadataBuilder = ChatGenerationMetadata.builder().finishReason(finishReason);
         List<Media> media = new ArrayList<>();
         String textContent;
-        if(choice.message().getContent() instanceof List<?> mediaContentList) {
+        if(choice.getMessage().getContent() instanceof List<?> mediaContentList) {
 
-        	textContent = mediaContentList.stream().map(item -> ((MediaContent)item).getText()).collect(Collectors.joining("\n"));
+        	textContent = mediaContentList.stream().map(item -> ((DashScopeResponse.MediaContent)item).getText()).collect(Collectors.joining("\n"));
         }else{
-        	textContent = choice.message().getContent().toString();
+        	textContent = choice.getMessage().getContent().toString();
         }
         var assistantMessage = AssistantMessage.builder().content(textContent).properties(metadata).toolCalls(toolCalls).media(media).build();
         return new Generation(assistantMessage,generationMetadataBuilder.build());
     }
 
-    private ChatResponseMetadata from(DashScopeApi.ChatCompletion result, RateLimit rateLimit, Usage usage) {
+    private ChatResponseMetadata from(DashScopeResponse result, RateLimit rateLimit, Usage usage) {
         Assert.notNull(result, "DashScope ChatCompletionResult must not be null");
-        var builder = ChatResponseMetadata.builder().id(result.requestId() != null ? result.requestId() : "")
+        var builder = ChatResponseMetadata.builder().id(result.getRequestId() != null ? result.getRequestId() : "")
                 .usage(usage).model("");
         if (rateLimit != null) {
             builder.rateLimit(rateLimit);
@@ -326,12 +327,12 @@ public class DashScopeChatModel implements ChatModel {
     }
 
     // TODO
-    private ChatCompletion toChatCompletion() {
-        return null;
-    }
+//    private ChatCompletion toChatCompletion() {
+//        return null;
+//    }
 
-    private DefaultUsage getDefaultUsage(DashScopeApi.Usage usage) {
-        return new DefaultUsage(usage.inputTokens(), usage.outputTokens(), usage.totalTokens());
+    private DefaultUsage getDefaultUsage(DashScopeResponse.Usage usage) {
+        return new DefaultUsage(usage.getInputTokens(), usage.getOutputTokens(), usage.getTotalTokens());
     }
 
     Prompt buildRequestPrompt(Prompt prompt) {
@@ -383,24 +384,36 @@ public class DashScopeChatModel implements ChatModel {
                         content = contentList;
                     }
                 }
-                return List.of(DashScopeRequest.Message.builder().content(content).role(message.getMessageType().name()));
+                return List.of(DashScopeRequest.Message.builder().content(content).role(DashScopeDefinition.Role.valueOf(message.getMessageType().name())).build());
             } else if (message.getMessageType() == MessageType.ASSISTANT) {
                 var assistantMessage = (AssistantMessage) message;
-                List<ToolCall> toolCalls = null;
+                List<DashScopeResponse.ToolCall> toolCalls = null;
                 if (!CollectionUtils.isEmpty(assistantMessage.getToolCalls())) {
                     toolCalls = assistantMessage.getToolCalls().stream().map(toolCall -> {
-                        var function = new ChatCompletionFunction(toolCall.name(), toolCall.arguments());
-                        return new ToolCall(toolCall.id(), toolCall.type(), function);
+                        var function = new DashScopeResponse.ChatFunction(toolCall.name(), toolCall.arguments());
+                        return new DashScopeResponse.ToolCall(toolCall.id(), toolCall.type(), function);
                     }).toList();
                 }
-                // TODO
-                return List.of(DashScopeRequest.Message.builder().content(message.getText()).role(Role.ASSISTANT.name()).build());
-                //return List.of(new ChatCompletionMessage(message.getText(), Role.ASSISTANT,toolCalls));
+                // 返回包含内容的消息，支持字符串或媒体内容列表
+                Object content = message.getText();
+                if (message instanceof AssistantMessage assistantMsg && !CollectionUtils.isEmpty(assistantMsg.getMedia())) {
+                    // 如果有媒体内容，构造媒体内容列表
+                    List<DashScopeRequest.MediaContent> contentList = new ArrayList<>();
+                    if (message.getText() != null) {
+                        contentList.add(new DashScopeRequest.MediaContent(message.getText()));
+                    }
+                    contentList.addAll(assistantMsg.getMedia().stream()
+                            .map(this::mapToMediaContent)
+                            .filter(java.util.Objects::nonNull)
+                            .toList());
+                    content = contentList;
+                }
+                return List.of(DashScopeRequest.Message.builder().content(content).role(DashScopeDefinition.Role.ASSISTANT).build());
             } else if (message.getMessageType() == MessageType.TOOL) {
                 ToolResponseMessage toolMessage = (ToolResponseMessage) message;
                 toolMessage.getResponses().forEach(
                         response -> Assert.isTrue(response.id() != null, "ToolResponseMessage must have an id"));
-                return toolMessage.getResponses().stream().map(tr -> new DashScopeRequest.Message(tr.responseData(), Role.TOOL,tr.id())).toList();
+                return toolMessage.getResponses().stream().map(tr -> new DashScopeRequest.Message(tr.responseData(), DashScopeDefinition.Role.TOOL,tr.id())).toList();
             } else {
                 throw new IllegalArgumentException("Unsupported message type: " + message.getMessageType());
             }
@@ -458,11 +471,11 @@ public class DashScopeChatModel implements ChatModel {
         }
     }
 
-    private List<DashScopeApi.FunctionTool> getFunctionTools(List<ToolDefinition> toolDefinitions) {
+    private List<DashScopeRequest.FunctionTool> getFunctionTools(List<ToolDefinition> toolDefinitions) {
         return toolDefinitions.stream().map(toolDefinition -> {
-            var function = new DashScopeApi.FunctionTool.Function(toolDefinition.description(), toolDefinition.name(),
+            var function = new DashScopeRequest.Function(toolDefinition.description(), toolDefinition.name(),
                     toolDefinition.inputSchema());
-            return new DashScopeApi.FunctionTool(function);
+            return new DashScopeRequest.FunctionTool(function);
         }).toList();
     }
 

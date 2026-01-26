@@ -351,7 +351,7 @@ public class DashScopeResponse {
 		private String finishReason;
 
 		@JsonProperty("message")
-		private Object message;
+		private Message message;
 
 		@JsonProperty("logprobs")
 		private Object logprobs;
@@ -364,11 +364,11 @@ public class DashScopeResponse {
 			this.finishReason = finishReason;
 		}
 
-		public Object getMessage() {
+		public Message getMessage() {
 			return message;
 		}
 
-		public void setMessage(Object message) {
+		public void setMessage(Message message) {
 			this.message = message;
 		}
 
@@ -378,6 +378,175 @@ public class DashScopeResponse {
 
 		public void setLogprobs(Object logprobs) {
 			this.logprobs = logprobs;
+		}
+	}
+
+	@JsonInclude(Include.NON_NULL)
+	public static class Message{
+
+		@JsonProperty("role")
+		private String role;
+
+		@JsonProperty("content")
+		private Object content;
+
+		@JsonProperty("reasoning_content")
+		private String reasoningContent;
+
+		@JsonProperty("toolCalls")
+		private List<ToolCall> toolCalls;
+
+		public String getRole() {
+			return role;
+		}
+
+		public void setRole(String role) {
+			this.role = role;
+		}
+
+		public Object getContent() {
+			return content;
+		}
+
+		public void setContent(Object content) {
+			this.content = content;
+		}
+
+		public String getReasoningContent() {
+			return reasoningContent;
+		}
+
+		public void setReasoningContent(String reasoningContent) {
+			this.reasoningContent = reasoningContent;
+		}
+
+		public List<ToolCall> getToolCalls() {
+			return toolCalls;
+		}
+
+		public void setToolCalls(List<ToolCall> toolCalls) {
+			this.toolCalls = toolCalls;
+		}
+	}
+
+	@JsonInclude(Include.NON_NULL)
+	public static class MediaContent{
+
+		@JsonProperty("text")
+		private String text;
+
+		@JsonProperty("image_hw")
+		private Object imageHw;
+
+		public String getText() {
+			return text;
+		}
+
+		public void setText(String text) {
+			this.text = text;
+		}
+
+		public Object getImageHw() {
+			return imageHw;
+		}
+
+		public void setImageHw(Object imageHw) {
+			this.imageHw = imageHw;
+		}
+	}
+
+	@JsonInclude(Include.NON_NULL)
+	public static class ToolCall{
+
+		public ToolCall(){
+
+		}
+
+		public ToolCall(String id,String type,ChatFunction function){
+			this.id = id;
+			this.type = type;
+			this.function = function;
+		}
+
+		public ToolCall(Integer index, String type, String id, ChatFunction function) {
+			this.index = index;
+			this.type = type;
+			this.id = id;
+			this.function = function;
+		}
+
+		private ChatFunction function;
+
+		private Integer index;
+
+		private String id;
+
+		private String type;
+
+		public ChatFunction getFunction() {
+			return function;
+		}
+
+		public void setFunction(ChatFunction function) {
+			this.function = function;
+		}
+
+		public Integer getIndex() {
+			return index;
+		}
+
+		public void setIndex(Integer index) {
+			this.index = index;
+		}
+
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public String getType() {
+			return type;
+		}
+
+		public void setType(String type) {
+			this.type = type;
+		}
+	}
+
+	@JsonInclude(Include.NON_NULL)
+	public static class ChatFunction{
+
+		public ChatFunction() {
+		}
+
+		public ChatFunction(String name, String arguments) {
+			this.name = name;
+			this.arguments = arguments;
+		}
+
+		@JsonProperty("name")
+		private String name;
+
+		@JsonProperty("arguments")
+		private String arguments;
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		public String getArguments() {
+			return arguments;
+		}
+
+		public void setArguments(String arguments) {
+			this.arguments = arguments;
 		}
 	}
 

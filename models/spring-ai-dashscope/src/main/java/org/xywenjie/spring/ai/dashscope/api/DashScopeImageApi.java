@@ -101,49 +101,6 @@ public class DashScopeImageApi {
         }
     }
 
-//    @JsonInclude(JsonInclude.Include.NON_NULL)
-//    public record ImageRequest(String model,Input input,Parameters parameters){
-//
-//        @JsonInclude(JsonInclude.Include.NON_NULL)
-//        public record Input(String prompt,@JsonProperty("negative_prompt") String negativePrompt){}
-//
-//        @JsonInclude(JsonInclude.Include.NON_NULL)
-//        public record Parameters(
-//                @JsonProperty("size") String size,
-//                Integer n,
-//                @JsonProperty("prompt_extend") Boolean promptExtend,
-//                @JsonProperty("watermark") Boolean watermark,
-//                Integer seed){
-//
-//        }
-//    }
-//
-//
-//    @JsonInclude(JsonInclude.Include.NON_NULL)
-//    public record DashScopeImageResponse(
-//            @JsonProperty("output") Output output,
-//            @JsonProperty("request_id") String requestId,
-//            String code,String message,Usage usage){
-//
-//        public record Output(
-//                @JsonProperty("task_id") String taskId,
-//                @JsonProperty("task_status") String taskStatus,
-//                @JsonProperty("results") List<Result> results,
-//                @JsonProperty("task_metrics") TaskMetrics taskMetrics,
-//                @JsonProperty("code") String code,
-//                @JsonProperty("message") String message){}
-//
-//        public record Result(String url,String code,String message){}
-//
-//        public record TaskMetrics(
-//                @JsonProperty("TOTAL") Integer total,
-//                @JsonProperty("SUCCEEDED") Integer succeeded,
-//                @JsonProperty("FAILED") Integer failed){}
-//
-//        public record Usage(@JsonProperty("image_count") Integer imageCount){}
-//
-//    }
-
     public static final class Builder{
 
         private String baseUrl = "https://dashscope.aliyuncs.com";

@@ -7,7 +7,6 @@ import org.springframework.ai.model.ModelOptionsUtils;
 import org.springframework.ai.model.tool.ToolCallingChatOptions;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.util.Assert;
-import org.xywenjie.spring.ai.dashscope.api.DashScopeApi;
 import org.xywenjie.spring.ai.dashscope.api.dto.DashScopeRequest;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -196,7 +195,7 @@ public class DashScopeChatOptions implements ToolCallingChatOptions{
 			return this;
 		}
 		
-		public Builder tools(List<DashScopeApi.FunctionTool> tools) {
+		public Builder tools(List<DashScopeRequest.FunctionTool> tools) {
 			this.options.parameters.setTools(tools);
 			return this;
 		}
@@ -211,11 +210,11 @@ public class DashScopeChatOptions implements ToolCallingChatOptions{
 		}
 	}
 
-	public List<DashScopeApi.FunctionTool> getTools() {
+	public List<DashScopeRequest.FunctionTool> getTools() {
 		return parameters.getTools();
 	}
 
-	public void setTools(List<DashScopeApi.FunctionTool> tools) {
+	public void setTools(List<DashScopeRequest.FunctionTool> tools) {
 		this.parameters.setTools(tools);
 	}
 

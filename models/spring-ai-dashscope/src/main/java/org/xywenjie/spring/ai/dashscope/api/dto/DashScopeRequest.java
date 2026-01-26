@@ -343,8 +343,17 @@ public class DashScopeRequest {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class Message{
 
+        public Message() {
+        }
+
+        public Message(Object content, DashScopeDefinition.Role role,String toolCallId) {
+            this.content = content;
+            this.role = role;
+            this.toolCallId = toolCallId;
+        }
+
         @JsonProperty("role")
-        private String role;
+        private DashScopeDefinition.Role role;
 
         @JsonProperty("content")
         private Object content;
@@ -356,7 +365,7 @@ public class DashScopeRequest {
          * Get the role of the message
          * @return The role string
          */
-        public String getRole() {
+        public DashScopeDefinition.Role getRole() {
             return role;
         }
 
@@ -364,7 +373,7 @@ public class DashScopeRequest {
          * Set the role of the message
          * @param role The role string
          */
-        public void setRole(String role) {
+        public void setRole(DashScopeDefinition.Role role) {
             this.role = role;
         }
 
@@ -405,7 +414,7 @@ public class DashScopeRequest {
                 return this;
             }
 
-            public Builder role(String role){
+            public Builder role(DashScopeDefinition.Role role){
                 messageRequest.setRole(role);
                 return this;
             }
@@ -649,6 +658,9 @@ public class DashScopeRequest {
         @JsonProperty("thinking_budget")
         private String thinkingBudget;
 
+        @JsonProperty("incremental_output ")
+        private Boolean incrementalOutput;
+
         @JsonProperty("tools")
         private List<FunctionTool> tools;
 
@@ -844,6 +856,14 @@ public class DashScopeRequest {
             this.thinkingBudget = thinkingBudget;
         }
 
+        public Boolean getIncrementalOutput() {
+            return incrementalOutput;
+        }
+
+        public void setIncrementalOutput(Boolean incrementalOutput) {
+            this.incrementalOutput = incrementalOutput;
+        }
+
         public List<FunctionTool> getTools() {
             return tools;
         }
@@ -894,6 +914,13 @@ public class DashScopeRequest {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class FunctionTool{
 
+        public FunctionTool() {
+        }
+
+        public FunctionTool(Function function) {
+            this.function = function;
+        }
+
         @JsonProperty("type")
         private String type = "function";
 
@@ -919,6 +946,15 @@ public class DashScopeRequest {
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class Function{
+
+        public Function() {
+        }
+
+        public Function(String description, String name, String parameters) {
+            this.description = description;
+            this.name = name;
+            this.parameters = parameters;
+        }
 
         @JsonProperty("name")
         private String name;

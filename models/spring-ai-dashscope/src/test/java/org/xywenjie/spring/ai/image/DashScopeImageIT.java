@@ -1,4 +1,4 @@
-package org.springframework.ai.dashscope.image;
+package org.xywenjie.spring.ai.image;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
@@ -10,8 +10,6 @@ import org.springframework.ai.image.*;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import static org.assertj.core.api.Assertions.assertThat;
-
-import org.assertj.core.api.Assertions;
 
 @SpringBootTest(classes = DashScopeTestConfiguration.class)
 @EnabledIfEnvironmentVariable(named = "DASHSCOPE_API_KEY", matches = ".+")
