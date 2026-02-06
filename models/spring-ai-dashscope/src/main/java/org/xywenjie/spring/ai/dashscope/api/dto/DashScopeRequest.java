@@ -410,7 +410,7 @@ public class DashScopeRequest {
             private Message messageRequest = new Message();
 
             public Builder content(Object content){
-                messageRequest.setContent(content.toString());
+                messageRequest.setContent(content);
                 return this;
             }
 
@@ -622,6 +622,9 @@ public class DashScopeRequest {
         @JsonProperty("n")
         private Integer n;
 
+        @JsonProperty("result_format")
+        private String resultFormat = "message";
+
         @JsonProperty("watermark")
         private Boolean watermark;
 
@@ -678,6 +681,14 @@ public class DashScopeRequest {
 
         public void setN(Integer n) {
             this.n = n;
+        }
+
+        public String getResultFormat() {
+            return resultFormat;
+        }
+
+        public void setResultFormat(String resultFormat) {
+            this.resultFormat = resultFormat;
         }
 
         public Boolean getWatermark() {

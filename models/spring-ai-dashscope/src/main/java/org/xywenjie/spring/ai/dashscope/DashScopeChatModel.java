@@ -25,6 +25,7 @@ import org.springframework.ai.chat.observation.ChatModelObservationConvention;
 import org.springframework.ai.chat.observation.ChatModelObservationDocumentation;
 import org.springframework.ai.chat.observation.DefaultChatModelObservationConvention;
 import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.content.Content;
 import org.springframework.ai.content.Media;
 import org.springframework.ai.model.ModelOptionsUtils;
 import org.springframework.ai.model.tool.*;
@@ -50,9 +51,11 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 /**
- * 新方法
+ * DashScope Chat Model implementation for Alibaba Cloud's DashScope AI service.
+ * 实现阿里巴巴云DashScope AI服务的聊天模型。
  *
  * @author 黄文杰
+ * @since 1.0.0
  */
 public class DashScopeChatModel implements ChatModel {
 
@@ -133,7 +136,7 @@ public class DashScopeChatModel implements ChatModel {
                         Map<String, Object> metadata = Map.of(
                                 "id", chatCompletion.getRequestId(),
                                 "role",choice.getMessage().getRole() != null ? choice.getMessage().getRole() : "",
-                                "finishReason",choice.getFinishReason());
+                                "finishReason",choice.getFinishReason() != null ? "" : "stop");
                         return buildGeneration(choice, metadata, request);
                     }).toList();
 
@@ -297,7 +300,6 @@ public class DashScopeChatModel implements ChatModel {
         List<Media> media = new ArrayList<>();
         String textContent;
         if(choice.getMessage().getContent() instanceof List<?> mediaContentList) {
-
         	textContent = mediaContentList.stream().map(item -> ((DashScopeResponse.MediaContent)item).getText()).collect(Collectors.joining("\n"));
         }else{
         	textContent = choice.getMessage().getContent().toString();
@@ -316,6 +318,17 @@ public class DashScopeChatModel implements ChatModel {
         return builder.build();
     }
     
+        /**
+     * Creates ChatResponseMetadata from existing metadata and usage information.
+     * 从现有元数据和使用信息创建聊天响应元数据。
+     *
+     * @param chatCompletionMessages the existing chat response metadata
+     *                              现有的聊天响应元数据
+     * @param usage the usage statistics
+     *              使用统计信息
+     * @return ChatResponseMetadata containing merged metadata
+     *         包含合并元数据的ChatResponseMetadata
+     */
     private ChatResponseMetadata from(ChatResponseMetadata chatCompletionMessages,Usage usage) {
     	Assert.notNull(chatCompletionMessages, "DashScope ChatResponseMetadata must not be null");
     	var builder = ChatResponseMetadata.builder().id(chatCompletionMessages.getId() != null ? chatCompletionMessages.getId() : "")
@@ -325,11 +338,6 @@ public class DashScopeChatModel implements ChatModel {
     	}
     	return builder.build();
     }
-
-    // TODO
-//    private ChatCompletion toChatCompletion() {
-//        return null;
-//    }
 
     private DefaultUsage getDefaultUsage(DashScopeResponse.Usage usage) {
         return new DefaultUsage(usage.getInputTokens(), usage.getOutputTokens(), usage.getTotalTokens());
@@ -374,55 +382,61 @@ public class DashScopeChatModel implements ChatModel {
     }
 
     DashScopeRequest createRequest(Prompt prompt, Boolean stream) {
-        List<DashScopeRequest.Message> chatCompletionMessages = prompt.getInstructions().stream().map(message -> {
-            if (message.getMessageType() == MessageType.USER || message.getMessageType() == MessageType.SYSTEM) {
-                Object content = message.getText();
-                if (message instanceof UserMessage userMessage) {
-                    if (!CollectionUtils.isEmpty(userMessage.getMedia())) {
-                        List<DashScopeRequest.MediaContent> contentList = new ArrayList<>(List.of(new DashScopeRequest.MediaContent(message.getText())));
-                        contentList.addAll(userMessage.getMedia().stream().map(this::mapToMediaContent).toList());
-                        content = contentList;
-                    }
-                }
-                return List.of(DashScopeRequest.Message.builder().content(content).role(DashScopeDefinition.Role.valueOf(message.getMessageType().name())).build());
-            } else if (message.getMessageType() == MessageType.ASSISTANT) {
-                var assistantMessage = (AssistantMessage) message;
-                List<DashScopeResponse.ToolCall> toolCalls = null;
-                if (!CollectionUtils.isEmpty(assistantMessage.getToolCalls())) {
-                    toolCalls = assistantMessage.getToolCalls().stream().map(toolCall -> {
-                        var function = new DashScopeResponse.ChatFunction(toolCall.name(), toolCall.arguments());
-                        return new DashScopeResponse.ToolCall(toolCall.id(), toolCall.type(), function);
-                    }).toList();
-                }
-                // 返回包含内容的消息，支持字符串或媒体内容列表
-                Object content = message.getText();
-                if (message instanceof AssistantMessage assistantMsg && !CollectionUtils.isEmpty(assistantMsg.getMedia())) {
-                    // 如果有媒体内容，构造媒体内容列表
-                    List<DashScopeRequest.MediaContent> contentList = new ArrayList<>();
-                    if (message.getText() != null) {
-                        contentList.add(new DashScopeRequest.MediaContent(message.getText()));
-                    }
-                    contentList.addAll(assistantMsg.getMedia().stream()
-                            .map(this::mapToMediaContent)
-                            .filter(java.util.Objects::nonNull)
-                            .toList());
-                    content = contentList;
-                }
-                return List.of(DashScopeRequest.Message.builder().content(content).role(DashScopeDefinition.Role.ASSISTANT).build());
-            } else if (message.getMessageType() == MessageType.TOOL) {
-                ToolResponseMessage toolMessage = (ToolResponseMessage) message;
-                toolMessage.getResponses().forEach(
-                        response -> Assert.isTrue(response.id() != null, "ToolResponseMessage must have an id"));
-                return toolMessage.getResponses().stream().map(tr -> new DashScopeRequest.Message(tr.responseData(), DashScopeDefinition.Role.TOOL,tr.id())).toList();
-            } else {
-                throw new IllegalArgumentException("Unsupported message type: " + message.getMessageType());
-            }
-        }).flatMap(List::stream).toList();
-
-        //DashScopeRequest request = new DashScopeRequest(chatCompletionMessages, stream);
         DashScopeRequest request = new DashScopeRequest();
         DashScopeChatOptions requestOptions = (DashScopeChatOptions) prompt.getOptions();
         request = ModelOptionsUtils.merge(requestOptions, request, DashScopeRequest.class);
+        String modelName = requestOptions.getModel();
+        if(StringUtils.hasText(modelName) && modelName.toLowerCase().contains("tts")){
+            String ttsText = prompt.getInstructions().stream().filter(msg -> msg.getMessageType() == MessageType.USER).findFirst().map(Content::getText).orElseThrow(() -> new IllegalArgumentException("TTS模型必须传入UserMessage类型的纯文本消息"));
+            request.getInput().setText(ttsText);
+        }else{
+            List<DashScopeRequest.Message> chatCompletionMessages = prompt.getInstructions().stream().map(message -> {
+                if (message.getMessageType() == MessageType.USER || message.getMessageType() == MessageType.SYSTEM) {
+                    Object content = message.getText();
+                    if (message instanceof UserMessage userMessage) {
+                        if (!CollectionUtils.isEmpty(userMessage.getMedia())) {
+                            List<DashScopeRequest.MediaContent> contentList = new ArrayList<>(List.of(new DashScopeRequest.MediaContent(message.getText())));
+                            contentList.addAll(userMessage.getMedia().stream().map(this::mapToMediaContent).toList());
+                            content = contentList;
+                        }
+                    }
+                    return List.of(DashScopeRequest.Message.builder().content(content).role(DashScopeDefinition.Role.valueOf(message.getMessageType().name())).build());
+                } else if (message.getMessageType() == MessageType.ASSISTANT) {
+                    var assistantMessage = (AssistantMessage) message;
+                    List<DashScopeResponse.ToolCall> toolCalls = null;
+                    if (!CollectionUtils.isEmpty(assistantMessage.getToolCalls())) {
+                        toolCalls = assistantMessage.getToolCalls().stream().map(toolCall -> {
+                            var function = new DashScopeResponse.ChatFunction(toolCall.name(), toolCall.arguments());
+                            return new DashScopeResponse.ToolCall(toolCall.id(), toolCall.type(), function);
+                        }).toList();
+                    }
+                    // 返回包含内容的消息，支持字符串或媒体内容列表
+                    Object content = message.getText();
+                    if (message instanceof AssistantMessage assistantMsg && !CollectionUtils.isEmpty(assistantMsg.getMedia())) {
+                        // 如果有媒体内容，构造媒体内容列表
+                        List<DashScopeRequest.MediaContent> contentList = new ArrayList<>();
+                        if (message.getText() != null) {
+                            contentList.add(new DashScopeRequest.MediaContent(message.getText()));
+                        }
+                        contentList.addAll(assistantMsg.getMedia().stream()
+                                .map(this::mapToMediaContent)
+                                .filter(java.util.Objects::nonNull)
+                                .toList());
+                        content = contentList;
+                    }
+                    return List.of(DashScopeRequest.Message.builder().content(content).role(DashScopeDefinition.Role.ASSISTANT).build());
+                } else if (message.getMessageType() == MessageType.TOOL) {
+                    ToolResponseMessage toolMessage = (ToolResponseMessage) message;
+                    toolMessage.getResponses().forEach(
+                            response -> Assert.isTrue(response.id() != null, "ToolResponseMessage must have an id"));
+                    return toolMessage.getResponses().stream().map(tr -> new DashScopeRequest.Message(tr.responseData(), DashScopeDefinition.Role.TOOL,tr.id())).toList();
+                } else {
+                    throw new IllegalArgumentException("Unsupported message type: " + message.getMessageType());
+                }
+            }).flatMap(List::stream).toList();
+            request.getInput().setMessages(chatCompletionMessages);
+        }
+
 
         List<ToolDefinition> toolDefinitions = this.toolCallingManager.resolveToolDefinitions(requestOptions);
         if (!CollectionUtils.isEmpty(toolDefinitions)) {
@@ -430,8 +444,6 @@ public class DashScopeChatModel implements ChatModel {
                     DashScopeChatOptions.builder().tools(this.getFunctionTools(toolDefinitions)).build(), request,
                     DashScopeRequest.class);
         }
-
-        // if(request.s)
         return request;
     }
 

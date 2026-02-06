@@ -4,10 +4,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.ai.dashscope.DashScopeTestConfiguration;
 import org.springframework.ai.dashscope.testutils.AbstractIT;
 import org.springframework.ai.image.*;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.xywenjie.spring.ai.DashScopeTestConfiguration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

@@ -10,9 +10,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.audio.tts.TextToSpeechPrompt;
 import org.springframework.ai.audio.tts.TextToSpeechResponse;
-import org.springframework.ai.dashscope.DashScopeTestConfiguration;
 import org.springframework.ai.dashscope.testutils.AbstractIT;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.xywenjie.spring.ai.DashScopeTestConfiguration;
 import org.xywenjie.spring.ai.dashscope.DashScopeAudioSpeechOptions;
 import org.xywenjie.spring.ai.dashscope.metadata.DashScopeAudioSpeechResponseMetadata;
 

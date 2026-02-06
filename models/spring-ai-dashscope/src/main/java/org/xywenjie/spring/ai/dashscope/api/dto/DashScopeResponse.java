@@ -2,11 +2,13 @@ package org.xywenjie.spring.ai.dashscope.api.dto;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.springframework.ai.model.ModelOptionsUtils;
 
 /**
  * @author Huang Wenjie
@@ -347,7 +349,7 @@ public class DashScopeResponse {
 	@JsonInclude(Include.NON_NULL)
 	public static class Choice{
 
-		@JsonProperty("finish_reason ")
+		@JsonProperty("finish_reason")
 		private String finishReason;
 
 		@JsonProperty("message")
@@ -405,6 +407,9 @@ public class DashScopeResponse {
 		}
 
 		public Object getContent() {
+			if(this.content instanceof List contentList){
+				return contentList.stream().map(item -> ModelOptionsUtils.mapToClass((Map) item,MediaContent.class)).toList();
+			}
 			return content;
 		}
 

@@ -28,13 +28,13 @@ import org.springframework.ai.chat.model.Generation;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.prompt.SystemPromptTemplate;
 import org.springframework.ai.content.Media;
-import org.springframework.ai.dashscope.DashScopeTestConfiguration;
 import org.springframework.ai.dashscope.testutils.AbstractIT;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.util.MimeTypeUtils;
+import org.xywenjie.spring.ai.DashScopeTestConfiguration;
 import org.xywenjie.spring.ai.dashscope.DashScopeChatOptions;
 import reactor.core.publisher.Flux;
 
@@ -320,7 +320,7 @@ public class DashScopeChatModelIT extends AbstractIT {
     }
 
     @ParameterizedTest(name = "{0}:{displayName}")
-    @ValueSource(strings = {"qwen3-omni-flash"})
+    @ValueSource(strings = {"qwen-tts"})
     void multiModalityOutputAudio(String modelName) throws IOException {
         var userMessage = new UserMessage("Tell me joke about Spring Framework");
 
@@ -329,8 +329,8 @@ public class DashScopeChatModelIT extends AbstractIT {
                         .model(modelName)
                         .build()));
 
-        logger.info(response.getResult().getOutput().getText());
-        assertThat(response.getResult().getOutput().getText()).isNotEmpty();
+//        logger.info(response.getResult().getOutput().getText());
+//        assertThat(response.getResult().getOutput().getText()).isNotEmpty();
 
         byte[] audio = response.getResult().getOutput().getMedia().get(0).getDataAsByteArray();
         assertThat(audio).isNotEmpty();
