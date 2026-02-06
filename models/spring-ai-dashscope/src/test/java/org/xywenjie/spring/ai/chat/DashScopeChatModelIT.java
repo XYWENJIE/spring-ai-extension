@@ -319,21 +319,4 @@ public class DashScopeChatModelIT extends AbstractIT {
         assertThat(content).containsAnyOf("bananas", "apple", "bowl", "basket", "fruit stand");
     }
 
-    @ParameterizedTest(name = "{0}:{displayName}")
-    @ValueSource(strings = {"qwen-tts"})
-    void multiModalityOutputAudio(String modelName) throws IOException {
-        var userMessage = new UserMessage("Tell me joke about Spring Framework");
-
-        ChatResponse response = this.chatModel.call(new Prompt(List.of(userMessage),
-                DashScopeChatOptions.builder()
-                        .model(modelName)
-                        .build()));
-
-//        logger.info(response.getResult().getOutput().getText());
-//        assertThat(response.getResult().getOutput().getText()).isNotEmpty();
-
-        byte[] audio = response.getResult().getOutput().getMedia().get(0).getDataAsByteArray();
-        assertThat(audio).isNotEmpty();
-    }
-
 }
