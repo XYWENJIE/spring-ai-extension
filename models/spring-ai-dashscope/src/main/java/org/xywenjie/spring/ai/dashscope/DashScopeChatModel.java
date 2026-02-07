@@ -131,12 +131,14 @@ public class DashScopeChatModel implements ChatModel {
                         logger.warn("No choices returned for prompt: {}", prompt);
                         return new ChatResponse(List.of());
                     }
+                    DashScopeResponse.Output output = chatCompletion.getOutput();
                     List<Generation> generations = choices.stream().map(choice -> {
                     	
                         Map<String, Object> metadata = Map.of(
                                 "id", chatCompletion.getRequestId(),
                                 "role",choice.getMessage().getRole() != null ? choice.getMessage().getRole() : "",
-                                "finishReason",choice.getFinishReason() != null ? "" : "stop");
+                                "finishReason",choice.getFinishReason() != null ? "" : "stop",
+                                "searchResults",output.getSearchInfo().getSearchResults() != null ? output.getSearchInfo().getSearchResults() : List.of(Map.of()));
                         return buildGeneration(choice, metadata, request);
                     }).toList();
 

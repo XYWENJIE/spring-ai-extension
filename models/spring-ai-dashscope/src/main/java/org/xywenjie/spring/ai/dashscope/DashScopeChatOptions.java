@@ -33,6 +33,9 @@ public class DashScopeChatOptions implements ToolCallingChatOptions{
 
 	@JsonIgnore
 	private List<ToolCallback> toolCallbacks = new ArrayList<>();
+
+	@JsonProperty("search_options")
+	private DashScopeRequest.SearchOptions searchOptions;
 	
 	public static Builder builder() {
 		return new Builder();
@@ -120,6 +123,14 @@ public class DashScopeChatOptions implements ToolCallingChatOptions{
 		this.toolCallbacks = toolCallbacks;
     }
 
+	public DashScopeRequest.SearchOptions getSearchOptions() {
+		return searchOptions;
+	}
+
+	public void setSearchOptions(DashScopeRequest.SearchOptions searchOptions) {
+		this.searchOptions = searchOptions;
+	}
+
 	@Override
 	@JsonIgnore
 	public Set<String> getToolNames() {
@@ -165,6 +176,16 @@ public class DashScopeChatOptions implements ToolCallingChatOptions{
 		
 		public Builder model(String model) {
 			this.options.model = model;
+			return this;
+		}
+
+		public Builder enableSearch(Boolean enableSearch){
+			this.options.parameters.setEnableSearch(enableSearch);
+			return this;
+		}
+
+		public Builder searchOptions(DashScopeRequest.SearchOptions searchOptions){
+			this.options.parameters.setSearchOptions(searchOptions);
 			return this;
 		}
 

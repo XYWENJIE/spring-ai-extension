@@ -272,7 +272,7 @@ public class DashScopeApi {
 				}
 			});
 			objectMapper.registerModule(simpleModule);
-			return objectMapper.writeValueAsString(obj);
+			return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(obj);
 		}catch (Exception e){
 			return "[LONG ERROR]"+e.getMessage();
 		}

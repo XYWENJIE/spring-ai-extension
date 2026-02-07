@@ -36,6 +36,9 @@ import org.springframework.core.io.Resource;
 import org.springframework.util.MimeTypeUtils;
 import org.xywenjie.spring.ai.DashScopeTestConfiguration;
 import org.xywenjie.spring.ai.dashscope.DashScopeChatOptions;
+import org.xywenjie.spring.ai.dashscope.api.dto.DashScopeDefinition;
+import org.xywenjie.spring.ai.dashscope.api.dto.DashScopeRequest;
+import org.xywenjie.spring.ai.dashscope.api.dto.DashScopeResponse;
 import reactor.core.publisher.Flux;
 
 @SpringBootTest(classes = DashScopeTestConfiguration.class)
@@ -317,6 +320,36 @@ public class DashScopeChatModelIT extends AbstractIT {
                 .collect(Collectors.joining());
         logger.info("Response: {}",content);
         assertThat(content).containsAnyOf("bananas", "apple", "bowl", "basket", "fruit stand");
+    }
+
+    @Test
+    void webSearchAnnotationsTest(){
+        UserMessage userMessage = new UserMessage("今天深圳的天气怎么样？");
+        var promptOptions = DashScopeChatOptions.builder()
+                .model(DashScopeDefinition.ChatModel.QWEN_MAX.getValue())
+                .enableSearch(Boolean.TRUE)
+                .searchOptions(DashScopeRequest.SearchOptions.builder()
+                        .enableCitation(true)
+                        .enableSource(true)
+                        .searchStrategy(DashScopeRequest.SearchStrategy.MAX)
+                        .forcedSearch(true)
+                        .build())
+                .build();
+
+        ChatResponse response = this.chatModel.call(new Prompt(List.of(userMessage),promptOptions));
+
+        logger.info("Response:{}",response);
+
+        assertThat(response.getResult().getOutput().getText()).isNotEmpty();
+
+        Object searchResultsRaw = response.getResult().getOutput().getMetadata().get("searchResults");
+        assertThat(searchResultsRaw).isNotNull().isInstanceOf(List.class);
+
+        List<DashScopeResponse.SearchResult> searchResults = (List<DashScopeResponse.SearchResult>)searchResultsRaw;
+        assertThat(searchResults).isNotEmpty();
+        assertThat(searchResults.get(0).getUrl()).isNotNull();
+        assertThat(searchResults.get(0).getTitle()).isNotEmpty();
+
     }
 
 }

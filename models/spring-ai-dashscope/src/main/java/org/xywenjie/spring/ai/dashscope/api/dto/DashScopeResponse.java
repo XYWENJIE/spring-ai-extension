@@ -101,6 +101,9 @@ public class DashScopeResponse {
     	@JsonProperty("choices")
     	private List<Choice> choices;
 
+		@JsonProperty("search_info")
+		private SearchInfo searchInfo;
+
         @JsonProperty("task_id")
         private String taskId;
 
@@ -175,6 +178,14 @@ public class DashScopeResponse {
 
 		public void setChoices(List<Choice> choices) {
 			this.choices = choices;
+		}
+
+		public SearchInfo getSearchInfo() {
+			return searchInfo;
+		}
+
+		public void setSearchInfo(SearchInfo searchInfo) {
+			this.searchInfo = searchInfo;
 		}
 
 		public String getTaskId() {
@@ -271,6 +282,91 @@ public class DashScopeResponse {
 		}
 
     }
+
+	@JsonInclude(Include.NON_NULL)
+	public static class SearchInfo{
+
+		@JsonProperty("extra_tool_info")
+		private List<Object> extraToolInfo;
+
+		@JsonProperty("search_results")
+		private List<SearchResult> searchResults;
+
+		public List<Object> getExtraToolInfo() {
+			return extraToolInfo;
+		}
+
+		public void setExtraToolInfo(List<Object> extraToolInfo) {
+			this.extraToolInfo = extraToolInfo;
+		}
+
+		public List<SearchResult> getSearchResults() {
+			return searchResults;
+		}
+
+		public void setSearchResults(List<SearchResult> searchResults) {
+			this.searchResults = searchResults;
+		}
+	}
+
+	@JsonInclude(Include.NON_NULL)
+	public static class SearchResult{
+
+		@JsonProperty("site_name")
+		private String siteName;
+
+		@JsonProperty("icon")
+		private String icon;
+
+		@JsonProperty("index")
+		private Integer index;
+
+		@JsonProperty("title")
+		private String title;
+
+		@JsonProperty("url")
+		private String url;
+
+		public String getSiteName() {
+			return siteName;
+		}
+
+		public void setSiteName(String siteName) {
+			this.siteName = siteName;
+		}
+
+		public String getIcon() {
+			return icon;
+		}
+
+		public void setIcon(String icon) {
+			this.icon = icon;
+		}
+
+		public Integer getIndex() {
+			return index;
+		}
+
+		public void setIndex(Integer index) {
+			this.index = index;
+		}
+
+		public String getTitle() {
+			return title;
+		}
+
+		public void setTitle(String title) {
+			this.title = title;
+		}
+
+		public String getUrl() {
+			return url;
+		}
+
+		public void setUrl(String url) {
+			this.url = url;
+		}
+	}
     
     @JsonInclude(Include.NON_NULL)
     public static class Result{

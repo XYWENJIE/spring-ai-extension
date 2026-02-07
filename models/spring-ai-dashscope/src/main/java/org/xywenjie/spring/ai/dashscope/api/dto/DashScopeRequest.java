@@ -667,6 +667,12 @@ public class DashScopeRequest {
         @JsonProperty("tools")
         private List<FunctionTool> tools;
 
+        @JsonProperty("enable_search")
+        private Boolean enableSearch;
+
+        @JsonProperty("search_options")
+        private SearchOptions searchOptions;
+
         public String getSize() {
             return size;
         }
@@ -883,6 +889,22 @@ public class DashScopeRequest {
             this.tools = tools;
         }
 
+        public Boolean getEnableSearch() {
+            return enableSearch;
+        }
+
+        public void setEnableSearch(Boolean enableSearch) {
+            this.enableSearch = enableSearch;
+        }
+
+        public SearchOptions getSearchOptions() {
+            return searchOptions;
+        }
+
+        public void setSearchOptions(SearchOptions searchOptions) {
+            this.searchOptions = searchOptions;
+        }
+
         public static Builder builder(){
             return new Builder();
         }
@@ -920,6 +942,130 @@ public class DashScopeRequest {
                 return parameters;
             }
         }
+    }
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public static class SearchOptions{
+
+        @JsonProperty("enable_source")
+        private Boolean enableSource;
+
+        @JsonProperty("enable_citation")
+        private Boolean enableCitation;
+
+        @JsonProperty("citation_format")
+        private String citationFormat;
+
+        @JsonProperty("forced_search")
+        private Boolean forcedSearch;
+
+        @JsonProperty("search_strategy")
+        private SearchStrategy searchStrategy;
+
+        @JsonProperty("enable_search_extension")
+        private Boolean enableSearchExtension;
+
+        @JsonProperty("prepend_search_result")
+        private Boolean prependSearchResult;
+
+        public Boolean getEnableSource() {
+            return enableSource;
+        }
+
+        public void setEnableSource(Boolean enableSource) {
+            this.enableSource = enableSource;
+        }
+
+        public Boolean getEnableCitation() {
+            return enableCitation;
+        }
+
+        public void setEnableCitation(Boolean enableCitation) {
+            this.enableCitation = enableCitation;
+        }
+
+        public String getCitationFormat() {
+            return citationFormat;
+        }
+
+        public void setCitationFormat(String citationFormat) {
+            this.citationFormat = citationFormat;
+        }
+
+        public Boolean getForcedSearch() {
+            return forcedSearch;
+        }
+
+        public void setForcedSearch(Boolean forcedSearch) {
+            this.forcedSearch = forcedSearch;
+        }
+
+        public SearchStrategy getSearchStrategy() {
+            return searchStrategy;
+        }
+
+        public void setSearchStrategy(SearchStrategy searchStrategy) {
+            this.searchStrategy = searchStrategy;
+        }
+
+        public Boolean getEnableSearchExtension() {
+            return enableSearchExtension;
+        }
+
+        public void setEnableSearchExtension(Boolean enableSearchExtension) {
+            this.enableSearchExtension = enableSearchExtension;
+        }
+
+        public Boolean getPrependSearchResult() {
+            return prependSearchResult;
+        }
+
+        public void setPrependSearchResult(Boolean prependSearchResult) {
+            this.prependSearchResult = prependSearchResult;
+        }
+
+        public static Builder builder(){
+            return new Builder();
+        }
+
+        public static class Builder {
+            private final SearchOptions searchOptions = new SearchOptions();
+
+            public Builder enableSource(Boolean enableSource){
+                this.searchOptions.enableSource = enableSource;
+                return this;
+            }
+
+            public Builder enableCitation(Boolean enableCitation){
+                this.searchOptions.enableCitation = enableCitation;
+                return this;
+            }
+
+            public Builder searchStrategy(SearchStrategy searchStrategy){
+                this.searchOptions.searchStrategy = searchStrategy;
+                return this;
+            }
+
+            public Builder forcedSearch(Boolean forcedSearch){
+                this.searchOptions.forcedSearch = forcedSearch;
+                return this;
+            }
+
+            public SearchOptions build(){
+                return searchOptions;
+            }
+        }
+    }
+
+    public enum SearchStrategy{
+        @JsonProperty("turbo")
+        TURBO,
+        @JsonProperty("max")
+        MAX,
+        @JsonProperty("agent")
+        AGENT,
+        @JsonProperty("agent_max")
+        AGENT_MAX
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)

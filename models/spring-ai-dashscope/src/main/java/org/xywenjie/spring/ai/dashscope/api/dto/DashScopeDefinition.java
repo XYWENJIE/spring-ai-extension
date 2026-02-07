@@ -1,6 +1,7 @@
 package org.xywenjie.spring.ai.dashscope.api.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.springframework.ai.model.ChatModelDescription;
 
 public class DashScopeDefinition {
 	
@@ -8,7 +9,7 @@ public class DashScopeDefinition {
 		
 	}
 	
-	public enum ChatModel {
+	public enum ChatModel implements ChatModelDescription {
 		QWEN3_MAX("qwen3-max"),
 		QWEN_MAX("qwen-max"),
 		QWEN_PLUS("qwen-plus"),
@@ -22,6 +23,11 @@ public class DashScopeDefinition {
 
 		public String getValue() {
 			return value;
+		}
+
+		@Override
+		public String getName() {
+			return this.value;
 		}
 	}
 	
