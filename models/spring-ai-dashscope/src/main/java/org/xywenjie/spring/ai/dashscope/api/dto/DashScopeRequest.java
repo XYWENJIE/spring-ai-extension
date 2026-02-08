@@ -659,7 +659,7 @@ public class DashScopeRequest {
         private Boolean enableThinking;
 
         @JsonProperty("thinking_budget")
-        private String thinkingBudget;
+        private Integer thinkingBudget;
 
         @JsonProperty("incremental_output ")
         private Boolean incrementalOutput;
@@ -861,7 +861,7 @@ public class DashScopeRequest {
          * Get the thinking budget for this request
          * @return The thinking budget string value
          */
-        public String getThinkingBudget() {
+        public Integer getThinkingBudget() {
             return thinkingBudget;
         }
 
@@ -869,7 +869,7 @@ public class DashScopeRequest {
          * Set the thinking budget for this request
          * @param thinkingBudget The thinking budget string value
          */
-        public void setThinkingBudget(String thinkingBudget) {
+        public void setThinkingBudget(Integer thinkingBudget) {
             this.thinkingBudget = thinkingBudget;
         }
 
@@ -1242,7 +1242,7 @@ public class DashScopeRequest {
             return this;
         }
 
-        public Builder thinkingBudget(String thinkingBudget) {
+        public Builder thinkingBudget(Integer thinkingBudget) {
              instance.getParameters().setThinkingBudget(thinkingBudget);
              return this;
          }

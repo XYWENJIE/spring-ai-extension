@@ -1,11 +1,6 @@
 package org.xywenjie.spring.ai.dashscope;
 
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -32,6 +27,7 @@ import org.springframework.ai.model.tool.*;
 import org.springframework.ai.retry.RetryUtils;
 import org.springframework.ai.support.UsageCalculator;
 import org.springframework.ai.tool.definition.ToolDefinition;
+import org.springframework.beans.BeanUtils;
 import org.springframework.core.retry.RetryTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -133,12 +129,11 @@ public class DashScopeChatModel implements ChatModel {
                     }
                     DashScopeResponse.Output output = chatCompletion.getOutput();
                     List<Generation> generations = choices.stream().map(choice -> {
-                    	
                         Map<String, Object> metadata = Map.of(
                                 "id", chatCompletion.getRequestId(),
                                 "role",choice.getMessage().getRole() != null ? choice.getMessage().getRole() : "",
                                 "finishReason",choice.getFinishReason() != null ? "" : "stop",
-                                "searchResults",output.getSearchInfo().getSearchResults() != null ? output.getSearchInfo().getSearchResults() : List.of(Map.of()));
+                                "searchResults",safeGetSearchResults(output));
                         return buildGeneration(choice, metadata, request);
                     }).toList();
 
@@ -280,6 +275,10 @@ public class DashScopeChatModel implements ChatModel {
         });
     }
 
+    private List<?> safeGetSearchResults(DashScopeResponse.Output output){
+        return Optional.ofNullable(output).map(DashScopeResponse.Output::getSearchInfo).map(DashScopeResponse.SearchInfo::getSearchResults).orElse(List.of());
+    }
+
     private HttpHeaders getAdditionalHttpHeaders(Prompt prompt) {
         Map<String, String> headers = new HashMap<>(this.defaultOptions.getHttpHeaders());
         if (prompt.getOptions() != null && prompt.getOptions() instanceof DashScopeChatOptions chatOptions) {
@@ -342,7 +341,7 @@ public class DashScopeChatModel implements ChatModel {
     }
 
     private DefaultUsage getDefaultUsage(DashScopeResponse.Usage usage) {
-        return new DefaultUsage(usage.getInputTokens(), usage.getOutputTokens(), usage.getTotalTokens());
+        return new DefaultUsage(usage.getInputTokens(), usage.getOutputTokens(), usage.getTotalTokens(),usage);
     }
 
     Prompt buildRequestPrompt(Prompt prompt) {

@@ -243,7 +243,7 @@ public class DashScopeApi {
 			Assert.notNull(this.apiKey, "apiKey must be set");
 			HttpClient httpClient = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
 			JdkClientHttpRequestFactory requestFactory = new JdkClientHttpRequestFactory(httpClient);
-			requestFactory.setReadTimeout(Duration.ofSeconds(45));
+			requestFactory.setReadTimeout(Duration.ofSeconds(155));
 			this.restClientBuilder.requestFactory(requestFactory);
 			return new DashScopeApi(this.baseUrl, this.apiKey, this.headers, this.completionsPath,
 					this.restClientBuilder, this.webClientBuilder, this.responseErrorHandler);

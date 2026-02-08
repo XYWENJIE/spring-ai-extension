@@ -179,6 +179,16 @@ public class DashScopeChatOptions implements ToolCallingChatOptions{
 			return this;
 		}
 
+		public Builder enableThinking(){
+			this.options.parameters.setEnableThinking(true);
+			return this;
+		}
+
+		public Builder thinkingBudget(Integer budget){
+			this.options.parameters.setThinkingBudget(budget);
+			return this;
+		}
+
 		public Builder enableSearch(Boolean enableSearch){
 			this.options.parameters.setEnableSearch(enableSearch);
 			return this;

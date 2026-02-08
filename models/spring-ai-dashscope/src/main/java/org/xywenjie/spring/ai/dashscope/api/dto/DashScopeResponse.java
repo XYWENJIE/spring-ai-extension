@@ -665,8 +665,8 @@ public class DashScopeResponse {
     	@JsonProperty("output_tokens")
     	private Integer outputTokens;
     	
-    	@JsonProperty("output_token_details")
-    	private OutputTokenDetails outputTokenDetails;
+    	@JsonProperty("output_tokens_details")
+    	private OutputTokensDetails outputTokensDetails;
     	
     	//输入文本的字符数。仅通义千问3-TTS-Flash模型返回该字段。
     	@JsonProperty("characters")
@@ -717,12 +717,12 @@ public class DashScopeResponse {
 			this.outputTokens = outputTokens;
 		}
 
-		public OutputTokenDetails getOutputTokenDetails() {
-			return outputTokenDetails;
+		public OutputTokensDetails getOutputTokensDetails() {
+			return outputTokensDetails;
 		}
 
-		public void setOutputTokenDetails(OutputTokenDetails outputTokenDetails) {
-			this.outputTokenDetails = outputTokenDetails;
+		public void setOutputTokenDetails(OutputTokensDetails outputTokensDetails) {
+			this.outputTokensDetails = outputTokensDetails;
 		}
 
 		public Integer getCharacters() {
@@ -788,8 +788,25 @@ public class DashScopeResponse {
 		public void setImageCount(Integer imageCount) {
 			this.imageCount = imageCount;
 		}
-        
-    }
+
+		@Override
+		public String toString() {
+			return "Usage{" +
+					"inputTokens=" + inputTokens +
+					", inputTokensDetails=" + inputTokensDetails +
+					", outputTokens=" + outputTokens +
+					", outputTokenDetails=" + outputTokensDetails +
+					", characters=" + characters +
+					", duration=" + duration +
+					", inputVideoDuration=" + inputVideoDuration +
+					", outputVideoDuration=" + outputVideoDuration +
+					", videoCount=" + videoCount +
+					", sr=" + sr +
+					", totalTokens=" + totalTokens +
+					", imageCount=" + imageCount +
+					'}';
+		}
+	}
     
     @JsonInclude(Include.NON_NULL)
     public static class InputTokensDetails{
@@ -814,6 +831,9 @@ public class DashScopeResponse {
     	
     	@JsonProperty("text_tokens")
     	private Integer textTokens;
+
+		@JsonProperty("reasoning_tokens")
+		private Integer reasoningTokens;
     	
     	public Integer getAudioTokens() {
 			return audioTokens;
@@ -830,7 +850,15 @@ public class DashScopeResponse {
     	public void setTextTokens(Integer textTokens) {
 			this.textTokens = textTokens;
 		}
-    }
+
+		public Integer getReasoningTokens() {
+			return reasoningTokens;
+		}
+
+		public void setReasoningTokens(Integer reasoningTokens) {
+			this.reasoningTokens = reasoningTokens;
+		}
+	}
     
     @JsonInclude(Include.NON_NULL)
     public static class Embedding{
@@ -944,9 +972,5 @@ public class DashScopeResponse {
 		public void setExpiresAt(Integer expiresAt) {
 			this.expiresAt = expiresAt;
 		}
-    }
-    
-    public static class OutputTokenDetails{
-    	
     }
 }

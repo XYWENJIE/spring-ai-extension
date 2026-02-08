@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.assertj.core.data.Percentage;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -23,6 +24,8 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.UserMessage;
+import org.springframework.ai.chat.metadata.DefaultUsage;
+import org.springframework.ai.chat.metadata.Usage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
 import org.springframework.ai.chat.prompt.Prompt;
@@ -349,7 +352,35 @@ public class DashScopeChatModelIT extends AbstractIT {
         assertThat(searchResults).isNotEmpty();
         assertThat(searchResults.get(0).getUrl()).isNotNull();
         assertThat(searchResults.get(0).getTitle()).isNotEmpty();
+    }
 
+    @Test
+    void testReasoningEffortParameter(){
+        DashScopeChatOptions chatOptions = DashScopeChatOptions.builder().model(DashScopeDefinition.ChatModel.QWEN3_MAX.getValue())
+                .thinkingBudget(80)
+                .enableThinking().build();
+
+        Prompt prompt = new Prompt(
+                "Are there an infinite number of prime numbers such that n mod 4 == 3? Think through the steps and respond.",
+                chatOptions);
+
+        ChatResponse response = this.chatModel.call(prompt);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getResults()).isNotEmpty();
+        assertThat(response.getMetadata()).isNotNull();
+        assertThat(response.getMetadata().getUsage()).isNotNull();
+
+        Usage usage = response.getMetadata().getUsage();
+        if(usage instanceof DefaultUsage defaultUsage){
+            Object nativeUsage = defaultUsage.getNativeUsage();
+            if(nativeUsage instanceof DashScopeResponse.Usage dashScopeUsage){
+                logger.info(dashScopeUsage.toString());
+                assertThat(dashScopeUsage.getTotalTokens()).isNotNull();
+                assertThat(dashScopeUsage.getOutputTokensDetails().getReasoningTokens()).isNotNull();
+                assertThat(dashScopeUsage.getOutputTokensDetails().getReasoningTokens()).isPositive();
+            }
+        }
     }
 
 }
