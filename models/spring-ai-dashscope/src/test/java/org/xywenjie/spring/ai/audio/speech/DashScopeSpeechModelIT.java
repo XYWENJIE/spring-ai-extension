@@ -6,6 +6,8 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.audio.tts.TextToSpeechPrompt;
@@ -58,6 +60,37 @@ public class DashScopeSpeechModelIT extends AbstractIT{
 		assertThat(metadata.getRateLimit()).isNotNull();
 		assertThat(metadata.getRateLimit().getRequestsLimit()).isPositive();
 		assertThat(metadata.getRateLimit().getRequestsLimit()).isPositive();
+	}
+
+	@Test
+	void shouldStreamNonEmptyResponsesForValidTextToSpeechPrompts(){
+		DashScopeAudioSpeechOptions speechOptions = DashScopeAudioSpeechOptions.builder()
+				.voice("Cherry").model("qwen3-tts-flash").build();
+
+		TextToSpeechPrompt speechPrompt = new TextToSpeechPrompt(
+				"Today is a wonderful day to build something people love!",speechOptions);
+		Flux<TextToSpeechResponse> responseFlux = this.speechModel.stream(speechPrompt);
+		assertThat(responseFlux).isNotNull();
+		List<TextToSpeechResponse> responses = responseFlux.collectList().block();
+		assertThat(responses).isNotNull();
+
+		responses.forEach(response -> assertThat(response.getResult().getOutput()).isNotEmpty());
+	}
+
+	@ParameterizedTest(name = "{0} : {displayName}")
+	@ValueSource(strings = {"Cherry"})
+	void speechVoicesTest(String voice){
+		DashScopeAudioSpeechOptions speechOptions = DashScopeAudioSpeechOptions.builder()
+				.voice(voice)
+				.model("qwen3-tts-flash")
+				.build();
+		TextToSpeechPrompt speechPrompt = new TextToSpeechPrompt(
+				"Today is a wonderful day to build something people love!",speechOptions);
+		TextToSpeechResponse response = this.speechModel.call(speechPrompt);
+		byte[] audioBytes = response.getResult().getOutput();
+		assertThat(response.getResults()).hasSize(1);
+		assertThat(response.getResults().get(0).getOutput()).isNotEmpty();
+		assertThat(audioBytes).hasSizeGreaterThan(0);
 	}
 
 }

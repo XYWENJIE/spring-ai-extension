@@ -123,7 +123,10 @@ public class DashScopeAudioSpeechModel implements TextToSpeechModel {
 
 		Flux<ResponseEntity<DashScopeResponse>> speechEntity = RetryUtils.execute(this.retryTemplate,
 				() -> this.audioApi.stream(speechRequest));
-		return speechEntity.map(entity -> {
+		return speechEntity.filter(entity -> {
+			String base64Data = entity.getBody().getOutput().getAudio().getData();
+			return StringUtils.hasText(base64Data);
+		}).map(entity -> {
 			String base64Data = entity.getBody().getOutput().getAudio().getData();
 			byte[] audioBytes = Base64.getDecoder().decode(base64Data);
 			return new TextToSpeechResponse(List.of(new Speech(audioBytes)),
@@ -164,6 +167,7 @@ public class DashScopeAudioSpeechModel implements TextToSpeechModel {
 		
 		mergedBuilder.model(source.getModel() != null ? source.getModel() : target.getModel());
 		mergedBuilder.text(source.getText() != null ? source.getText(): target.getText());
+		mergedBuilder.voice(source.getVoice() != null ? source.getVoice() : target.getVoice());
 		return mergedBuilder.build();
 	}
 }

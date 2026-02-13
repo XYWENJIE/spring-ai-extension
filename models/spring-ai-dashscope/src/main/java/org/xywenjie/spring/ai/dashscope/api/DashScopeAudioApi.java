@@ -72,6 +72,7 @@ public class DashScopeAudioApi {
 
 		this.webClient = webClientBuilder.clone().baseUrl(baseUrl).defaultHeaders(authHeaders)
 				.defaultRequest(requestHeadersSpec -> {
+					requestHeadersSpec.header("X-DashScope-SSE", "enable");
 					if (!(apiKey instanceof NoopApiKey)) {
 						requestHeadersSpec.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey.getValue());
 					}
@@ -107,7 +108,7 @@ public class DashScopeAudioApi {
 	public Flux<ResponseEntity<DashScopeResponse>> stream(DashScopeRequest requestBody) {
 		Assert.isTrue(requestBody.getModel().equals("qwen3-tts-flash"), "Only qwen3-tts-flash supported here");
 		return this.webClient.post().uri("/api/v1/services/aigc/multimodal-generation/generation")
-				.body(Mono.just(requestBody), DashScopeRequest.class).accept(MediaType.APPLICATION_JSON)
+				.body(Mono.just(requestBody), DashScopeRequest.class).accept(MediaType.TEXT_EVENT_STREAM)
 				.exchangeToFlux(clientResponse -> {
 					HttpHeaders headers = clientResponse.headers().asHttpHeaders();
 					return clientResponse.bodyToFlux(DashScopeResponse.class)

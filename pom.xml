@@ -15,8 +15,8 @@
     </repository>
   </repositories>
   <properties>
-    <spring-ai.version>2.0.0-M1</spring-ai.version>
-    <spring-boot.version>4.0.0</spring-boot.version>
+    <spring-ai.version>2.0.0-M2</spring-ai.version>
+    <spring-boot.version>4.0.2</spring-boot.version>
   </properties>
   <build>
     <plugins>
@@ -37,8 +37,8 @@
     <module>models/spring-ai-dashscope</module>
     <module>models/spring-ai-moyin</module>
     <module>models/spring-ai-hunyuan</module>
+    <module>models/spring-ai-volcengine</module>
     <module>spring-ai-model</module>
-    <module>spring-ai-spring-boot-autoconfigure</module>
   </modules>
   <dependencyManagement>
     <dependencies>

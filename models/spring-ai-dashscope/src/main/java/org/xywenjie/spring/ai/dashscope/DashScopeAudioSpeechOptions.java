@@ -1,13 +1,17 @@
 package org.xywenjie.spring.ai.dashscope;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.ai.audio.tts.TextToSpeechOptions;
 
 public class DashScopeAudioSpeechOptions implements TextToSpeechOptions {
 
+    @JsonProperty("text")
     private String text;
-    
+
+    @JsonProperty("model")
     private String model;
-    
+
+    @JsonProperty("voice")
     private String voice;
 
     public String getText() {
@@ -31,10 +35,10 @@ public class DashScopeAudioSpeechOptions implements TextToSpeechOptions {
     public String getVoice() {
         return voice;
     }
-    
+
     public void setVoice(String voice) {
-		this.voice = voice;
-	}
+        this.voice = voice;
+    }
 
     @Override
     public String getFormat() {
