@@ -11,16 +11,12 @@ import org.springframework.http.client.*;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.reactive.function.client.*;
+import org.xywenjie.spring.ai.dashscope.*;
+import org.xywenjie.spring.ai.dashscope.api.dto.DashScopeDefinition;
 import reactor.core.publisher.Mono;
-import org.xywenjie.spring.ai.dashscope.DashScopeAudioSpeechModel;
-import org.xywenjie.spring.ai.dashscope.DashScopeChatModel;
-import org.xywenjie.spring.ai.dashscope.DashScopeChatOptions;
-import org.xywenjie.spring.ai.dashscope.DashScopeEmbeddingModel;
-import org.xywenjie.spring.ai.dashscope.DashScopeImageModel;
 import org.xywenjie.spring.ai.dashscope.api.DashScopeApi;
 import org.xywenjie.spring.ai.dashscope.api.DashScopeAudioApi;
 import org.xywenjie.spring.ai.dashscope.api.DashScopeImageApi;
-import org.xywenjie.spring.ai.dashscope.api.DashScopeApi.ChatModel;
 import org.springframework.boot.SpringBootConfiguration;
 
 import java.io.BufferedReader;
@@ -33,40 +29,6 @@ public class DashScopeTestConfiguration {
 
 	private static final Logger log = LoggerFactory.getLogger(DashScopeTestConfiguration.class);
 
-//	private String getApiKey() {
-//		String apiKey = System.getenv("DASHSCOPE_API_KEY");
-//		if(!StringUtils.hasText(apiKey)) {
-//			throw new IllegalArgumentException("你必须提供一个API密钥。请将其放入名为DASHSCOPE_API_KEY的环境变量中。");
-//		}
-//		return apiKey;
-//	}
-//	
-//	@Bean
-//	public QWenDashScopeService dashScopeService() {
-//		return new QWenDashScopeService(getApiKey());
-//	}
-//
-//	@Bean
-//	public ImageDashScopeService imageDashScopeService() {
-//		return new ImageDashScopeService(getApiKey());
-//	}
-//
-//	@Bean
-//	public QWenChatModel qWenChatClient(QWenDashScopeService dashScopeService) {
-//		return new QWenChatModel(dashScopeService);
-//	}
-//	
-//	@Bean
-//	public QWenImageModel qWenImageClient(ImageDashScopeService imageDashScopeService) {
-//		return new QWenImageModel(imageDashScopeService);
-//	}
-	
-//	@Bean
-//	public EmbeddingModel qwenEmbeddingClient(DashsCopeService dashCopeService) {
-//		return new QWenEmbeddingModel(dashCopeService);
-//	}
-	
-	//以上是历史遗留代码
 	@Bean
 	public DashScopeApi dashScopeApi() {
 		return DashScopeApi.builder()
@@ -97,8 +59,13 @@ public class DashScopeTestConfiguration {
 	public DashScopeChatModel dashScopeChatModel(DashScopeApi dashScopeApi) {
 		return DashScopeChatModel.builder()
 				.dashScopeApi(dashScopeApi)
-				.defaultOptions(DashScopeChatOptions.builder().model(ChatModel.QWEN_MAX.getName()).build())
+				.defaultOptions(DashScopeChatOptions.builder().model(DashScopeDefinition.ChatModel.QWEN_MAX.getName()).build())
 				.build();
+	}
+
+	@Bean
+	public DashScopeAudioTranscriptionModel dashScopeAudioTranscriptionModel(DashScopeApi dashScopeApi){
+		return new DashScopeAudioTranscriptionModel(dashScopeApi);
 	}
 	
 	@Bean

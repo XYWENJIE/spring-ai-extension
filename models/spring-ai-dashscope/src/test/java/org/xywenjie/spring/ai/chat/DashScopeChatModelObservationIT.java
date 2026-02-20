@@ -18,6 +18,7 @@ import org.springframework.core.retry.RetryTemplate;
 import org.xywenjie.spring.ai.dashscope.DashScopeChatModel;
 import org.xywenjie.spring.ai.dashscope.DashScopeChatOptions;
 import org.xywenjie.spring.ai.dashscope.api.DashScopeApi;
+import org.xywenjie.spring.ai.dashscope.api.dto.DashScopeDefinition;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.ai.chat.observation.ChatModelObservationDocumentation.HighCardinalityKeyNames;
@@ -54,7 +55,7 @@ public class DashScopeChatModelObservationIT {
                 .hasObservationWithNameEqualTo(DefaultChatModelObservationConvention.DEFAULT_NAME)
                 .that()
                 .hasLowCardinalityKeyValue(LowCardinalityKeyNames.AI_OPERATION_TYPE.asString(), AiOperationType.CHAT.value())
-                .hasLowCardinalityKeyValue(LowCardinalityKeyNames.AI_PROVIDER.asString(), DashScopeApi.ChatModel.QWEN_MAX.getValue())
+                .hasLowCardinalityKeyValue(LowCardinalityKeyNames.AI_PROVIDER.asString(), DashScopeDefinition.ChatModel.QWEN_MAX.getValue())
                 .hasLowCardinalityKeyValue(LowCardinalityKeyNames.RESPONSE_MODEL.asString(), responseMetadata.getModel())
                 .hasHighCardinalityKeyValue(HighCardinalityKeyNames.REQUEST_FREQUENCY_PENALTY.asString(),"0.0");
     }

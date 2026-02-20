@@ -616,6 +616,9 @@ public class DashScopeRequest {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class Parameters{
 
+        @JsonProperty("asr_options")
+        private AsrOptions asrOptions;
+
         @JsonProperty("size")
         private String size;
 
@@ -672,6 +675,14 @@ public class DashScopeRequest {
 
         @JsonProperty("search_options")
         private SearchOptions searchOptions;
+
+        public AsrOptions getAsrOptions() {
+            return asrOptions;
+        }
+
+        public void setAsrOptions(AsrOptions asrOptions) {
+            this.asrOptions = asrOptions;
+        }
 
         public String getSize() {
             return size;
@@ -938,9 +949,40 @@ public class DashScopeRequest {
                 return this;
             }
 
+            public Builder asrOptions(AsrOptions asrOptions){
+                this.parameters.setAsrOptions(asrOptions);
+                return this;
+            }
+
             public Parameters build(){
                 return parameters;
             }
+        }
+    }
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public static class AsrOptions{
+
+        @JsonProperty("language")
+        private String language;
+
+        @JsonProperty("enable_itn")
+        private Boolean enableItn;
+
+        public String getLanguage() {
+            return language;
+        }
+
+        public void setLanguage(String language) {
+            this.language = language;
+        }
+
+        public Boolean getEnableItn() {
+            return enableItn;
+        }
+
+        public void setEnableItn(Boolean enableItn) {
+            this.enableItn = enableItn;
         }
     }
 

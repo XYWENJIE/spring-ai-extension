@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.model.*;
 import org.springframework.ai.retry.RetryUtils;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +28,7 @@ import org.springframework.util.*;
 import org.springframework.web.client.ResponseErrorHandler;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.xywenjie.spring.ai.dashscope.api.dto.DashScopeDefinition;
 import org.xywenjie.spring.ai.dashscope.api.dto.DashScopeRequest;
 import org.xywenjie.spring.ai.dashscope.api.dto.DashScopeResponse;
 
@@ -46,15 +48,15 @@ public class DashScopeApi {
 		return new Builder();
 	}
 
-	public static final DashScopeApi.ChatModel DEFAULT_CHAT_MODEL = ChatModel.QWEN_PLUS;
+	public static final DashScopeDefinition.ChatModel DEFAULT_CHAT_MODEL = DashScopeDefinition.ChatModel.QWEN_PLUS;
 	
 	public static final String DEFAULT_EMBEDDING_MODEL = "text-embedding-v4";
 
 	private String completionsPath;
 	
-	private String multimodelPath = "/api/v1/services/aigc/multimodal-generation/generation";
+	private final String multimodelPath = "/api/v1/services/aigc/multimodal-generation/generation";
 	
-	private String embeddingsPath = "/api/v1/services/embeddings/text-embedding/text-embedding";
+	private final String embeddingsPath = "/api/v1/services/embeddings/text-embedding/text-embedding";
 	
 	private final ApiKey apiKey;
 
@@ -145,27 +147,70 @@ public class DashScopeApi {
 				//.doOnNext(rawJson -> log.info("流返回JSON块：{}",rawJson)).map(rawJson -> ModelOptionsUtils.jsonToObject(rawJson,DashScopeResponse.class));
 	}
 
-	public enum ChatModel implements ChatModelDescription {
-		QWQ_PLUS("qwq-plus"), QWQ_PLUS_LATEST("qwq-plus-latest"), QWEN_MAX("qwen-max"),
-		QWEN_MAX_LATEST("qwen-max-latest"), QWEN_PLUS("qwen-plus"), QWEN_PLUS_LATEST("qwen-plus-latest"),
-		QWEN_TURBO("qwen-turbo");
-
-		public final String value;
-
-		ChatModel(String value) {
-			this.value = value;
-		}
-
-		public String getValue() {
-			return value;
-		}
-
-		@Override
-		public String getName() {
-			return this.value;
-		}
-
+	/**
+	 * 调用DashScope多模态模型API接口
+	 *
+	 * @param dashScopeRequest 包含多模态请求参数的对象，不能为空
+	 * @return ResponseEntity<DashScopeResponse> 包含API响应的状态码和数据
+	 */
+	public ResponseEntity<DashScopeResponse> multimodel(DashScopeRequest dashScopeRequest){
+		Assert.notNull(dashScopeRequest,"The request body can not be null.");
+		log.info("提交参数：body:{}", toJsonStringForLog(dashScopeRequest));
+		return this.restClient.post().uri(this.multimodelPath).body(dashScopeRequest).retrieve().toEntity(DashScopeResponse.class);
 	}
+
+	/**
+	 * 调用DashScope多模态模型流式API接口
+	 *
+	 * @param dashScopeRequest 包含多模态请求参数的对象，不能为空
+	 * @return Flux<DashScopeResponse> 流式响应数据，支持服务器发送事件(SSE)
+	 */
+	public Flux<DashScopeResponse> multimodelStream(DashScopeRequest dashScopeRequest){
+		Assert.notNull(dashScopeRequest,"The request body can not be null.");
+		return this.webClient.post().uri(this.multimodelPath).headers(httpHeaders -> {
+			httpHeaders.add("X-DashScope-SSE","enable");
+		}).body(Mono.just(dashScopeRequest),DashScopeResponse.class)
+				.retrieve().bodyToFlux(DashScopeResponse.class);
+	}
+
+	/**
+	 * 上传文件到DashScope指定的OSS存储，并返回上传数据
+	 * @param resource 要上传的文件资源，不能为空
+	 * @param modelName 模型名称，用于获取对应的上传策略，不能为空
+	 * @return UploadsData 包含上传策略和文件访问信息的数据对象
+	 */
+	public String uploadsTemplateUrl(Resource resource,String modelName){
+		Assert.notNull(resource,"Resource must not be null");
+		Assert.notNull(modelName,"Model name must not be null");
+		MultiValueMap<String,String> queryParam = new LinkedMultiValueMap<>();
+		queryParam.add("action","getPolicy");
+		queryParam.add("model",modelName);
+		ResponseEntity<UploadsResponse> policyResponse = this.restClient.get().uri("/api/v1/uploads",queryParam).retrieve().toEntity(UploadsResponse.class);
+		if(!policyResponse.getStatusCode().is2xxSuccessful()){
+			String errorMsg = String.format("Failed to get upload policy for model '%s'. Status: %d",
+					modelName, policyResponse.getStatusCode().value());
+			throw new IllegalArgumentException(errorMsg);
+		}
+
+		UploadsData uploadsData = policyResponse.getBody().data();
+		String key = uploadsData.uploadDir + "/"+resource.getFilename();
+		MultiValueMap<String,Object> formData = new LinkedMultiValueMap<>();
+		formData.add("OSSAccessKeyId",uploadsData.ossAccessKeyId);
+		formData.add("policy",uploadsData.policy);
+		formData.add("Signature",uploadsData.signature);
+		formData.add("key",key);
+		formData.add("x-oss-object-acl",uploadsData.xOSSObjectAcl);
+		formData.add("x-oss-forbid-overwrite",uploadsData.xOssForbidOverwrite);
+		formData.add("file",resource);
+		ResponseEntity<Void> uploadersResponse = this.restClient.post().uri(uploadsData.uploadHost).contentType(MediaType.MULTIPART_FORM_DATA).body(formData).retrieve().toBodilessEntity();
+		if(!uploadersResponse.getStatusCode().is2xxSuccessful()){
+			String errorMsg = String.format("File upload failed. Status: %d",uploadersResponse.getStatusCode().value());
+			throw new IllegalArgumentException(errorMsg);
+		}
+		return "oss://"+key;
+	}
+
+
 	
 	public ResponseEntity<DashScopeResponse> embeddings(DashScopeRequest request){
 		Assert.notNull(request, "");
@@ -184,6 +229,23 @@ public class DashScopeApi {
 		if(headers.get(HttpHeaders.AUTHORIZATION) == null && !(this.apiKey instanceof NoopApiKey)) {
 			headers.setBearerAuth(this.apiKey.getValue());
 		}
+	}
+
+	private record UploadsResponse(@JsonProperty("data") UploadsData data){
+
+	}
+
+	public record UploadsData(
+			@JsonProperty("policy") String policy,
+			@JsonProperty("signature") String signature,
+			@JsonProperty("upload_dir") String uploadDir,
+			@JsonProperty("upload_host") String uploadHost,
+			@JsonProperty("expire_in_seconds")Integer expireInSeconds,
+			@JsonProperty("max_file_size_mb") Integer maxFileSizeMb,
+			@JsonProperty("capacity_limit_mb") Integer capacityLimitMb,
+			@JsonProperty("oss_access_key_id") String ossAccessKeyId,
+			@JsonProperty("x_oss_object_acl") String xOSSObjectAcl,
+			@JsonProperty("x_oss_forbid_overwrite") Boolean xOssForbidOverwrite){
 	}
 
 	public static class Builder {

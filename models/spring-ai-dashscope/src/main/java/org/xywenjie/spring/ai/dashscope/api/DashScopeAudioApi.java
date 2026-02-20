@@ -116,6 +116,10 @@ public class DashScopeAudioApi {
 				});
 	}
 
+	public ResponseEntity<DashScopeResponse> createTranscription(DashScopeRequest requestBody){
+		return this.restClient.post().uri("/api/v1/services/aigc/multimodal-generation/generation").body(requestBody).retrieve().toEntity(DashScopeResponse.class);
+	}
+
 	/**
 	 * DashScopeAudioApi构建器
 	 */
