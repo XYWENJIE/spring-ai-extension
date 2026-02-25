@@ -38,6 +38,9 @@ public class DashScopeImageOptions implements ImageOptions {
     @JsonProperty("height")
     private Integer height;
 
+    @JsonProperty("username")
+    private String username;
+
     @Override
     public Integer getN() {
         return this.n;
@@ -106,6 +109,14 @@ public class DashScopeImageOptions implements ImageOptions {
         return seed;
     }
 
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
     @Override
     public String toString() {
         return "DashScopeImageOptions{" +
@@ -118,25 +129,70 @@ public class DashScopeImageOptions implements ImageOptions {
                 ", seed=" + seed +
                 ", width=" + width +
                 ", height=" + height +
+                ", username='" + username + '\'' +
                 '}';
     }
 
-    public static class Builder{
+    public static class Builder {
 
         protected DashScopeImageOptions options;
 
-        public Builder(){
+        public Builder() {
             this.options = new DashScopeImageOptions();
         }
 
-        public Builder model(String model){
+        public Builder model(String model) {
             this.options.setModel(model);
             return this;
         }
 
-        public DashScopeImageOptions build(){
-            return this.options;
+        public Builder n(Integer n) {
+            this.options.n = n;
+            return this;
         }
 
+        public Builder size(String size) {
+            this.options.size = size;
+            return this;
+        }
+
+        public Builder negativePrompt(String negativePrompt) {
+            this.options.negativePrompt = negativePrompt;
+            return this;
+        }
+
+        public Builder promptExtend(Boolean promptExtend) {
+            this.options.promptExtend = promptExtend;
+            return this;
+        }
+
+        public Builder watermark(Boolean watermark) {
+            this.options.watermark = watermark;
+            return this;
+        }
+
+        public Builder seed(Integer seed) {
+            this.options.seed = seed;
+            return this;
+        }
+
+        public Builder width(Integer width) {
+            this.options.setWidth(width);
+            return this;
+        }
+
+        public Builder height(Integer height) {
+            this.options.setHeight(height);
+            return this;
+        }
+
+        public Builder username(String username) {
+            this.options.username = username;
+            return this;
+        }
+
+        public DashScopeImageOptions build() {
+            return this.options;
+        }
     }
 }

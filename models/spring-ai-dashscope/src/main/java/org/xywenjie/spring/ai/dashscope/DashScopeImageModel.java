@@ -19,11 +19,17 @@ import org.springframework.util.CollectionUtils;
 import org.xywenjie.spring.ai.dashscope.api.DashScopeImageApi;
 import org.xywenjie.spring.ai.dashscope.api.dto.DashScopeRequest;
 import org.xywenjie.spring.ai.dashscope.api.dto.DashScopeResponse;
-
+import org.xywenjie.spring.ai.model.TaskContext;
+import org.xywenjie.spring.ai.model.TaskPersistentService;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * @author 黄文杰
+ */
 public class DashScopeImageModel implements ImageModel {
 
     private static final Logger logger = LoggerFactory.getLogger(DashScopeImageModel.class);
@@ -42,24 +48,29 @@ public class DashScopeImageModel implements ImageModel {
     
     private final ImageModelObservationConvention observationConvention = DEFAULT_OBSERVATION_CONVENTION;
 
+    private final TaskPersistentService taskPersistentService;
+
+    private final Map<String,TaskContext> taskContextMap = new ConcurrentHashMap<>();
+
     public DashScopeImageModel(DashScopeImageApi dashScopeImageApi){
         this(dashScopeImageApi,DashScopeImageOptions.builder().build(), RetryUtils.DEFAULT_RETRY_TEMPLATE);
     }
 
     public DashScopeImageModel(DashScopeImageApi dashScopeImageApi,DashScopeImageOptions options,RetryTemplate retryTemplate){
-        this(dashScopeImageApi,options,retryTemplate,ObservationRegistry.NOOP);
+        this(dashScopeImageApi,options,retryTemplate,ObservationRegistry.NOOP,null);
     }
 
-    public DashScopeImageModel(DashScopeImageApi dashScopeImageApi,DashScopeImageOptions options,
-                               RetryTemplate retryTemplate,ObservationRegistry observationRegistry){
-        Assert.notNull(dashScopeImageApi,"dashScopeImageApi must not be null");
-        Assert.notNull(options,"options must not be null");
-        Assert.notNull(retryTemplate,"retryTemplate must not be null");
-        Assert.notNull(observationRegistry,"observationRegistry must not be null");
-        this.dashScopeImageApi =dashScopeImageApi;
+    public DashScopeImageModel(DashScopeImageApi dashScopeImageApi, DashScopeImageOptions options,
+                               RetryTemplate retryTemplate, ObservationRegistry observationRegistry, TaskPersistentService taskPersistentService) {
+        Assert.notNull(dashScopeImageApi, "dashScopeImageApi must not be null");
+        Assert.notNull(options, "options must not be null");
+        Assert.notNull(retryTemplate, "retryTemplate must not be null");
+        Assert.notNull(observationRegistry, "observationRegistry must not be null");
+        this.dashScopeImageApi = dashScopeImageApi;
         this.defaultOptions = options;
         this.retryTemplate = retryTemplate;
         this.observationRegistry = observationRegistry;
+        this.taskPersistentService = taskPersistentService;
     }
 
     @Override
@@ -83,11 +94,18 @@ public class DashScopeImageModel implements ImageModel {
         			if(responseEntity.getBody() != null) {
         				DashScopeResponse response = responseEntity.getBody();
         				String status = response.getOutput().getTaskStatus();
+                        TaskContext taskContext = taskContextMap.get(taskId);
+                        if(taskContext != null && !status.equals(taskContext.getStatus())){
+                            taskContext.setStatus(status);
+                            this.taskPersistentService.updateTask(taskContext);
+                        }
         				switch (status) {
 							case "SUCCEEDED" -> {
+                                taskContextMap.remove(taskId);
 								return toImageResponse(response);
 							}
 							case "FAILED","UNKNOWN" -> {
+                                taskContextMap.remove(taskId);
 								return new ImageResponse(List.of(),toMetadata(response));
 							}
         				}
@@ -103,12 +121,25 @@ public class DashScopeImageModel implements ImageModel {
 
         DashScopeRequest imageRequest = constructImageRequest(request,imageOptions);
 
-        HttpEntity<DashScopeResponse> submitResponse = dashScopeImageApi.submitImageGenTask(imageRequest);
+        HttpEntity<DashScopeResponse> submitResponse = this.dashScopeImageApi.submitImageGenTask(imageRequest);
         if(submitResponse == null || submitResponse.getBody() == null){
             logger.warn("Submit imageGen error,request:{}",request);
             return null;
         }
-        return submitResponse.getBody().getOutput().getTaskId();
+        DashScopeResponse dashScopeResponse = submitResponse.getBody();
+        if(taskPersistentService != null){
+            String taskId = dashScopeResponse.getOutput().getTaskId();
+            TaskContext taskContext = TaskContext.builder()
+                .taskId(taskId)
+                .provider("DashScope")
+                .model(imageRequest.getModel())
+                .prompt(imageRequest.getInput().getPrompt())
+                .build();
+            taskContextMap.put(taskId, taskContext);
+            taskPersistentService.saveTask(taskContext);
+            //记录AI任务
+        }
+        return dashScopeResponse.getOutput().getTaskId();
     }
 
     private DashScopeImageOptions toImageOptions(ImageOptions runtimeOptions){
