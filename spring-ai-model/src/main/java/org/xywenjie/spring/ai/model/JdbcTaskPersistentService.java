@@ -40,6 +40,12 @@ public class JdbcTaskPersistentService implements TaskPersistentService{
 
     @Override
     public void saveTask(TaskContext taskContext){
+        Assert.notNull(taskContext, "taskContext must not be null");
+        Assert.notNull(taskContext.getTaskId(), "taskContext.taskId must not be null");
+        Assert.notNull(taskContext.getPrompt(), "taskContext.prompt must not be null");
+        Assert.notNull(taskContext.getUsername(), "taskContext.username must not be null");
+        Assert.notNull(taskContext.getProvider(), "taskContext.provider must not be null");
+        Assert.notNull(taskContext.getModel(), "taskContext.model must not be null");
         jdbcClient.sql(insertSql)
             .param(taskContext.getTaskId())
             .param(taskContext.getPrompt())

@@ -380,6 +380,12 @@ public class DashScopeResponse {
     	@JsonProperty("url")
     	private String url;
 
+		@JsonProperty("code")
+		private String code;
+
+		@JsonProperty("message")
+		private String message;
+
 		public String getOrigPrompt() {
 			return origPrompt;
 		}
@@ -403,7 +409,23 @@ public class DashScopeResponse {
 		public void setUrl(String url) {
 			this.url = url;
 		}
-    }
+
+		public String getCode() {
+			return code;
+		}
+
+		public void setCode(String code) {
+			this.code = code;
+		}
+
+		public String getMessage() {
+			return message;
+		}
+
+		public void setMessage(String message) {
+			this.message = message;
+		}
+	}
     
     @JsonInclude(Include.NON_NULL)
     public static class TaskMetrics{

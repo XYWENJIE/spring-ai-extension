@@ -1,6 +1,8 @@
 package org.xywenjie.spring.ai.dashscope;
 
 import io.micrometer.observation.ObservationRegistry;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.image.*;
@@ -16,15 +18,14 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 import org.xywenjie.spring.ai.dashscope.api.DashScopeImageApi;
 import org.xywenjie.spring.ai.dashscope.api.dto.DashScopeRequest;
 import org.xywenjie.spring.ai.dashscope.api.dto.DashScopeResponse;
 import org.xywenjie.spring.ai.model.TaskContext;
 import org.xywenjie.spring.ai.model.TaskPersistentService;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -74,7 +75,7 @@ public class DashScopeImageModel implements ImageModel {
     }
 
     @Override
-    public ImageResponse call(ImagePrompt request) {
+    public @Nullable ImageResponse call(@NonNull ImagePrompt request) {
         Assert.notNull(request, "Prompt must not be null");
         Assert.isTrue(!CollectionUtils.isEmpty(request.getInstructions()), "Prompt messages must not be empty");
         String taskId = submitImageGenTask(request);
@@ -102,10 +103,26 @@ public class DashScopeImageModel implements ImageModel {
         				switch (status) {
 							case "SUCCEEDED" -> {
                                 taskContextMap.remove(taskId);
+                                int imageCount = response.getUsage().getImageCount();
+                                taskContext.setSuccessCount(Optional.of(imageCount).get());
+                                taskContext.setStatus("SUCCEEDED");
+                                List<String> resultList = new ArrayList<>();
+                                for(DashScopeResponse.Result result : response.getOutput().getResults()){
+                                    if(StringUtils.hasText(result.getCode())){
+                                        resultList.add(result.getMessage());
+                                    }else{
+                                        resultList.add(result.getUrl());
+                                    }
+                                }
+                                this.taskPersistentService.completeTask(taskContext);
 								return toImageResponse(response);
 							}
 							case "FAILED","UNKNOWN" -> {
                                 taskContextMap.remove(taskId);
+                                taskContext.setStatus(status);
+                                taskContext.setErrorCode(response.getOutput().getCode());
+                                taskContext.setErrorMessage(response.getOutput().getMessage());
+                                this.taskPersistentService.completeTask(taskContext);
 								return new ImageResponse(List.of(),toMetadata(response));
 							}
         				}
@@ -134,6 +151,7 @@ public class DashScopeImageModel implements ImageModel {
                 .provider("DashScope")
                 .model(imageRequest.getModel())
                 .prompt(imageRequest.getInput().getPrompt())
+                .username(imageOptions.getUsername())
                 .build();
             taskContextMap.put(taskId, taskContext);
             taskPersistentService.saveTask(taskContext);

@@ -9,7 +9,7 @@
     </parent>
     <artifactId>spring-ai-model</artifactId>
     <name>spring-ai-model</name>
-    <url>http://maven.apache.org</url>
+    <url>https://maven.apache.org</url>
 
     <dependencies>
         <dependency>
