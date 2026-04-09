@@ -24,6 +24,35 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * DashScope 音频转录模型实现类，用于对接阿里云 DashScope AI 服务的语音识别能力。
+ *
+ * <p>支持功能：</p>
+ * <ul>
+ *   <li>语音转文字（ASR）</li>
+ *   <li>支持多种音频格式（FLAC、MP3、WAV 等）</li>
+ *   <li>支持提示词引导识别</li>
+ *   <li>支持语言配置</li>
+ * </ul>
+ *
+ * <p>使用示例：</p>
+ * <pre>{@code
+ * DashScopeAudioTranscriptionModel transcriptionModel = new DashScopeAudioTranscriptionModel(
+ *     dashScopeApi,
+ *     DashScopeAudioTranscriptionOptions.builder().model("qwen3-asr-flash").build()
+ * );
+ *
+ * AudioTranscriptionResponse response = transcriptionModel.call(
+ *     new AudioTranscriptionPrompt(audioResource)
+ * );
+ * String text = response.getResult().getOutput();
+ * }</pre>
+ *
+ * @author 黄文杰
+ * @since 1.0.0
+ * @see TranscriptionModel
+ * @see DashScopeApi
+ */
 public class DashScopeAudioTranscriptionModel implements TranscriptionModel {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -38,14 +67,32 @@ public class DashScopeAudioTranscriptionModel implements TranscriptionModel {
             ".flac","audio/flac"
     );
 
+    /**
+     * 使用默认模型构造音频转录模型。
+     *
+     * @param dashScopeApi DashScope API 客户端
+     */
     public DashScopeAudioTranscriptionModel(DashScopeApi dashScopeApi){
         this(dashScopeApi,DashScopeAudioTranscriptionOptions.builder().model("qwen3-asr-flash").build());
     }
 
+    /**
+     * 使用自定义选项构造音频转录模型。
+     *
+     * @param dashScopeApi DashScope API 客户端
+     * @param options 转录选项
+     */
     public DashScopeAudioTranscriptionModel(DashScopeApi dashScopeApi,DashScopeAudioTranscriptionOptions options){
         this(dashScopeApi,options, RetryUtils.DEFAULT_RETRY_TEMPLATE);
     }
 
+    /**
+     * 使用自定义选项和重试策略构造音频转录模型。
+     *
+     * @param dashScopeApi DashScope API 客户端
+     * @param options 转录选项
+     * @param retryTemplate 重试模板
+     */
     public DashScopeAudioTranscriptionModel(DashScopeApi dashScopeApi,DashScopeAudioTranscriptionOptions options,
                                             RetryTemplate retryTemplate){
         Assert.notNull(dashScopeApi,"DashScopeApi must not be null");
@@ -56,11 +103,23 @@ public class DashScopeAudioTranscriptionModel implements TranscriptionModel {
         this.retryTemplate = retryTemplate;
     }
 
+    /**
+     * 识别音频内容并返回文本。
+     *
+     * @param audioResource 音频资源
+     * @return 识别出的文本内容
+     */
     public String call(Resource audioResource){
         AudioTranscriptionPrompt transcriptionRequest = new AudioTranscriptionPrompt(audioResource);
         return call(transcriptionRequest).getResult().getOutput();
     }
 
+    /**
+     * 执行音频转录。
+     *
+     * @param transcriptionPrompt 转录请求
+     * @return 转录响应
+     */
     @Override
     public AudioTranscriptionResponse call(AudioTranscriptionPrompt transcriptionPrompt) {
         Resource audioResource = transcriptionPrompt.getInstructions();

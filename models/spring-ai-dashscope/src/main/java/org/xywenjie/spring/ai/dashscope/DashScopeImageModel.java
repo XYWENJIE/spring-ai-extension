@@ -29,7 +29,33 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
+ * DashScope 图像生成模型实现类，用于对接阿里云 DashScope AI 服务的图像生成能力。
+ *
+ * <p>支持功能：</p>
+ * <ul>
+ *   <li>文生图（Text-to-Image）</li>
+ *   <li>异步任务管理</li>
+ *   <li>任务状态持久化</li>
+ *   <li>可配置的图像参数（尺寸、数量、水印等）</li>
+ * </ul>
+ *
+ * <p>使用示例：</p>
+ * <pre>{@code
+ * DashScopeImageModel imageModel = new DashScopeImageModel(
+ *     dashScopeImageApi,
+ *     DashScopeImageOptions.builder().model("wanx-v1").size("1024*1024").build(),
+ *     retryTemplate,
+ *     observationRegistry,
+ *     taskPersistentService
+ * );
+ *
+ * ImageResponse response = imageModel.call(new ImagePrompt("一只可爱的猫"));
+ * }</pre>
+ *
  * @author 黄文杰
+ * @since 1.0.0
+ * @see ImageModel
+ * @see TaskPersistentService
  */
 public class DashScopeImageModel implements ImageModel {
 
@@ -53,14 +79,35 @@ public class DashScopeImageModel implements ImageModel {
 
     private final Map<String,TaskContext> taskContextMap = new ConcurrentHashMap<>();
 
+    /**
+     * 使用默认选项构造图像生成模型。
+     *
+     * @param dashScopeImageApi DashScope 图像 API 客户端
+     */
     public DashScopeImageModel(DashScopeImageApi dashScopeImageApi){
         this(dashScopeImageApi,DashScopeImageOptions.builder().build(), RetryUtils.DEFAULT_RETRY_TEMPLATE);
     }
 
+    /**
+     * 使用自定义选项构造图像生成模型。
+     *
+     * @param dashScopeImageApi DashScope 图像 API 客户端
+     * @param options 图像生成选项
+     * @param retryTemplate 重试模板
+     */
     public DashScopeImageModel(DashScopeImageApi dashScopeImageApi,DashScopeImageOptions options,RetryTemplate retryTemplate){
         this(dashScopeImageApi,options,retryTemplate,ObservationRegistry.NOOP,null);
     }
 
+    /**
+     * 使用完整参数构造图像生成模型。
+     *
+     * @param dashScopeImageApi DashScope 图像 API 客户端
+     * @param options 图像生成选项
+     * @param retryTemplate 重试模板
+     * @param observationRegistry 观测注册表
+     * @param taskPersistentService 任务持久化服务（可选）
+     */
     public DashScopeImageModel(DashScopeImageApi dashScopeImageApi, DashScopeImageOptions options,
                                RetryTemplate retryTemplate, ObservationRegistry observationRegistry, TaskPersistentService taskPersistentService) {
         Assert.notNull(dashScopeImageApi, "dashScopeImageApi must not be null");
@@ -74,6 +121,12 @@ public class DashScopeImageModel implements ImageModel {
         this.taskPersistentService = taskPersistentService;
     }
 
+    /**
+     * 执行图像生成请求。
+     *
+     * @param request 图像生成提示
+     * @return 图像生成响应
+     */
     @Override
     public @Nullable ImageResponse call(@NonNull ImagePrompt request) {
         Assert.notNull(request, "Prompt must not be null");
@@ -132,6 +185,12 @@ public class DashScopeImageModel implements ImageModel {
         		});
     }
 
+    /**
+     * 提交图像生成任务。
+     *
+     * @param request 图像生成提示
+     * @return 任务 ID
+     */
     public String submitImageGenTask(ImagePrompt request) {
         DashScopeImageOptions imageOptions = toImageOptions(request.getOptions());
         logger.debug("Image options:{}",imageOptions);

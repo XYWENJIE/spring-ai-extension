@@ -1,4 +1,6 @@
 package org.xywenjie.spring.ai.dashscope;
 
-public class DashScopeVideoModel {
+import org.xywenjie.spring.ai.model.VideoModel;
+
+public class DashScopeVideoModel implements VideoModel {
 }

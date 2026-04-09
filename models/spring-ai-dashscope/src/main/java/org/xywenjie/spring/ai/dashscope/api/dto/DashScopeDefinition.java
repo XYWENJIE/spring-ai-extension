@@ -6,7 +6,18 @@ import org.springframework.ai.model.ChatModelDescription;
 public class DashScopeDefinition {
 	
 	public enum ImageModel {
-		
+		WAN2_2_T2I_FLASH("wan2.2-t2i-flash"),
+		WAN2_5_I2I_PREVIEW("wan2.5-i2i-preview");
+
+		private final String value;
+
+		ImageModel(String value){
+			this.value = value;
+		}
+
+		public String getValue() {
+			return value;
+		}
 	}
 	
 	public enum ChatModel implements ChatModelDescription {

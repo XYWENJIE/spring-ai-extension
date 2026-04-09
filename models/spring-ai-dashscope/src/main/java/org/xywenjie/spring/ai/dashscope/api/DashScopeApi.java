@@ -3,10 +3,6 @@ package org.xywenjie.spring.ai.dashscope.api;
 import java.io.IOException;
 import java.net.http.HttpClient;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.function.Consumer;
 
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -23,7 +19,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
-import org.springframework.http.client.reactive.JdkClientHttpConnector;
 import org.springframework.util.*;
 import org.springframework.web.client.ResponseErrorHandler;
 import org.springframework.web.client.RestClient;
@@ -32,7 +27,6 @@ import org.xywenjie.spring.ai.dashscope.api.dto.DashScopeDefinition;
 import org.xywenjie.spring.ai.dashscope.api.dto.DashScopeRequest;
 import org.xywenjie.spring.ai.dashscope.api.dto.DashScopeResponse;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;

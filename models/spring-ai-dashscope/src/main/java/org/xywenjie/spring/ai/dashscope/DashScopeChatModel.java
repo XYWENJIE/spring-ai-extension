@@ -27,14 +27,11 @@ import org.springframework.ai.model.tool.*;
 import org.springframework.ai.retry.RetryUtils;
 import org.springframework.ai.support.UsageCalculator;
 import org.springframework.ai.tool.definition.ToolDefinition;
-import org.springframework.beans.BeanUtils;
 import org.springframework.core.retry.RetryTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.*;
 import org.xywenjie.spring.ai.dashscope.api.DashScopeApi;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationRegistry;
@@ -47,11 +44,30 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 /**
- * DashScope Chat Model implementation for Alibaba Cloud's DashScope AI service.
- * 实现阿里巴巴云DashScope AI服务的聊天模型。
+ * DashScope 聊天模型实现类，用于对接阿里云 DashScope AI 服务的对话能力。
+ *
+ * <p>支持功能：</p>
+ * <ul>
+ *   <li>普通对话（同步/流式）</li>
+ *   <li>多模态输入（文本、图片、音频）</li>
+ *   <li>工具调用（Function Calling）</li>
+ *   <li>TTS 语音合成</li>
+ * </ul>
+ *
+ * <p>使用示例：</p>
+ * <pre>{@code
+ * DashScopeChatModel chatModel = DashScopeChatModel.builder()
+ *     .dashScopeApi(dashScopeApi)
+ *     .defaultOptions(DashScopeChatOptions.builder().model("qwen-turbo").build())
+ *     .build();
+ *
+ * ChatResponse response = chatModel.call(new Prompt("你好"));
+ * }</pre>
  *
  * @author 黄文杰
  * @since 1.0.0
+ * @see ChatModel
+ * @see DashScopeApi
  */
 public class DashScopeChatModel implements ChatModel {
 
@@ -75,12 +91,30 @@ public class DashScopeChatModel implements ChatModel {
 
     private final ChatModelObservationConvention observationConvention = DEFAULT_OBSERVATION_CONVENTION;
 
+    /**
+     * 构造聊天模型。
+     *
+     * @param dashScopeApi DashScope API 客户端
+     * @param defaultOptions 默认选项
+     * @param toolCallingManager 工具调用管理器
+     * @param retryTemplate 重试模板
+     * @param observationRegistry 观测注册表
+     */
     public DashScopeChatModel(DashScopeApi dashScopeApi,DashScopeChatOptions defaultOptions,ToolCallingManager toolCallingManager,
                               RetryTemplate retryTemplate,ObservationRegistry observationRegistry){
         this(dashScopeApi,defaultOptions,toolCallingManager,retryTemplate,observationRegistry,new DefaultToolExecutionEligibilityPredicate());
     }
 
-
+    /**
+     * 使用完整参数构造聊天模型。
+     *
+     * @param dashScopeApi DashScope API 客户端
+     * @param defaultOptions 默认选项
+     * @param toolCallingManager 工具调用管理器
+     * @param retryTemplate 重试模板
+     * @param observationRegistry 观测注册表
+     * @param toolExecutionEligibilityPredicate 工具执行资格判定器
+     */
     public DashScopeChatModel(DashScopeApi dashScopeApi, DashScopeChatOptions defaultOptions,
                               ToolCallingManager toolCallingManager, RetryTemplate retryTemplate,
                               ObservationRegistry observationRegistry, ToolExecutionEligibilityPredicate toolExecutionEligibilityPredicate) {
@@ -98,12 +132,25 @@ public class DashScopeChatModel implements ChatModel {
         this.toolExecutionEligibilityPredicate = toolExecutionEligibilityPredicate;
     }
 
+    /**
+     * 执行同步聊天请求。
+     *
+     * @param prompt 聊天提示
+     * @return 聊天响应
+     */
     @Override
     public ChatResponse call(Prompt prompt) {
         Prompt requestPrompt = buildRequestPrompt(prompt);
         return this.internalCall(requestPrompt, null);
     }
 
+    /**
+     * 内部调用方法，支持工具调用链。
+     *
+     * @param prompt 聊天提示
+     * @param previousChatResponse 前一次聊天响应（用于工具调用链）
+     * @return 聊天响应
+     */
     public ChatResponse internalCall(Prompt prompt, ChatResponse previousChatResponse) {
         DashScopeRequest request = createRequest(prompt, Boolean.FALSE);
         ChatModelObservationContext observationContext = ChatModelObservationContext.builder()
@@ -164,12 +211,25 @@ public class DashScopeChatModel implements ChatModel {
         return response;
     }
 
+    /**
+     * 执行流式聊天请求。
+     *
+     * @param prompt 聊天提示
+     * @return 流式聊天响应
+     */
     @Override
     public Flux<ChatResponse> stream(Prompt prompt) {
         Prompt requestPrompt = buildRequestPrompt(prompt);
         return internalStream(requestPrompt, null);
     }
 
+    /**
+     * 内部流式调用方法，支持工具调用链。
+     *
+     * @param prompt 聊天提示
+     * @param previousChatResponse 前一次聊天响应（用于工具调用链）
+     * @return 流式聊天响应
+     */
     public Flux<ChatResponse> internalStream(Prompt prompt, ChatResponse previousChatResponse) {
         return Flux.deferContextual(contentView -> {
             DashScopeRequest request = createRequest(prompt, true);

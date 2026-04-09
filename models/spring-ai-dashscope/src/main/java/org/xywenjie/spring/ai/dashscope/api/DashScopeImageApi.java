@@ -1,12 +1,9 @@
 package org.xywenjie.spring.ai.dashscope.api;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.model.ApiKey;
+import org.springframework.ai.model.ModelOptionsUtils;
 import org.springframework.ai.model.NoopApiKey;
 import org.springframework.ai.model.SimpleApiKey;
 import org.springframework.ai.retry.RetryUtils;
@@ -17,10 +14,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.util.Assert;
 import org.springframework.web.client.ResponseErrorHandler;
 import org.springframework.web.client.RestClient;
+import org.xywenjie.spring.ai.dashscope.api.dto.DashScopeDefinition;
 import org.xywenjie.spring.ai.dashscope.api.dto.DashScopeRequest;
 import org.xywenjie.spring.ai.dashscope.api.dto.DashScopeResponse;
-
-import java.util.List;
 
 /**
  * 图像生成API，新的2.6版本用普通DashScopeApi来实现，该类兼容以往的操作。
@@ -30,9 +26,7 @@ public class DashScopeImageApi {
 
     private static final Logger logger = LoggerFactory.getLogger(DashScopeImageApi.class);
 
-    private static final String DEFAULT_IMAGE_MODEL = ImageModel.WAN2_2_T2I_FLASH.getValue();
-
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private static final String DEFAULT_IMAGE_MODEL = DashScopeDefinition.ImageModel.WAN2_2_T2I_FLASH.getValue();
 
     private final RestClient restClient;
 
@@ -51,7 +45,7 @@ public class DashScopeImageApi {
                 .defaultStatusHandler(responseErrorHandler)
                 .defaultRequest(requestHeadersSpec -> {
                     if(!(apiKey instanceof NoopApiKey)){
-                        requestHeadersSpec.header(HttpHeaders.AUTHORIZATION,"Bearer "+apiKey.getValue());
+                        requestHeadersSpec.header(HttpHeaders.AUTHORIZATION,"Bearer " + apiKey.getValue());
                     }
                 })
                 .build();
@@ -76,29 +70,10 @@ public class DashScopeImageApi {
         if(imageRequest.getModel().equals("wan2.6-t2i")) {
         	return getMultimodalGenerationResult(imageRequest);
         }
-        try {
-            String body = objectMapper.writeValueAsString(imageRequest);
-            logger.info(body);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
+        String body = ModelOptionsUtils.toJsonStringPrettyPrinter(imageRequest);
+        logger.info(body);
         return this.restClient.post().uri("/api/v1/services/aigc/text2image/image-synthesis").header("X-DashScope-Async", "enable")
         		.body(imageRequest).retrieve().toEntity(DashScopeResponse.class);
-    }
-
-    public enum ImageModel{
-        WAN2_5_T2I_PREVIEW("wan2.5-t2i-preview"),
-        WAN2_2_T2I_FLASH("wan2.2-t2i-flash");
-
-        private final String value;
-
-        ImageModel(String value){
-            this.value = value;
-        }
-
-        public String getValue() {
-            return value;
-        }
     }
 
     public static final class Builder{

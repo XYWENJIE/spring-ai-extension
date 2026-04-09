@@ -30,7 +30,29 @@ import org.xywenjie.spring.ai.dashscope.api.dto.DashScopeResponse;
 import io.micrometer.observation.ObservationRegistry;
 
 /**
- * @author Huang Wenjie
+ * DashScope 向量嵌入模型实现类，用于对接阿里云 DashScope AI 服务的文本向量化能力。
+ *
+ * <p>支持功能：</p>
+ * <ul>
+ *   <li>文本向量化（Embedding）</li>
+ *   <li>批量文本处理</li>
+ *   <li>可配置的元数据模式</li>
+ * </ul>
+ *
+ * <p>使用示例：</p>
+ * <pre>{@code
+ * DashScopeEmbeddingModel embeddingModel = new DashScopeEmbeddingModel(dashScopeApi);
+ *
+ * EmbeddingResponse response = embeddingModel.call(
+ *     new EmbeddingRequest(List.of("文本内容"), 
+ *     DashScopeEmbeddingOptions.builder().model("text-embedding-v3").build())
+ * );
+ * }</pre>
+ *
+ * @author 黄文杰
+ * @since 1.0.0
+ * @see AbstractEmbeddingModel
+ * @see DashScopeApi
  */
 public class DashScopeEmbeddingModel extends AbstractEmbeddingModel{
 
@@ -50,23 +72,58 @@ public class DashScopeEmbeddingModel extends AbstractEmbeddingModel{
 	
 	private final RetryTemplate retryTemplate;
 	
+	/**
+	 * 使用默认元数据模式构造嵌入模型。
+	 *
+	 * @param dashScopeApi DashScope API 客户端
+	 */
 	public DashScopeEmbeddingModel(DashScopeApi dashScopeApi) {
 		this(dashScopeApi,MetadataMode.EMBED);
 	}
-	
+
+	/**
+	 * 使用指定元数据模式构造嵌入模型。
+	 *
+	 * @param dashScopeApi DashScope API 客户端
+	 * @param metadataMode 元数据模式
+	 */
 	public DashScopeEmbeddingModel(DashScopeApi dashScopeApi,MetadataMode metadataMode) {
 		this(dashScopeApi,metadataMode,DashScopeEmbeddingOptions.builder().model(DashScopeApi.DEFAULT_EMBEDDING_MODEL).build());
 	}
-	
+
+	/**
+	 * 使用自定义选项构造嵌入模型。
+	 *
+	 * @param dashScopeApi DashScope API 客户端
+	 * @param metadataMode 元数据模式
+	 * @param options 嵌入选项
+	 */
 	public DashScopeEmbeddingModel(DashScopeApi dashScopeApi,MetadataMode metadataMode,DashScopeEmbeddingOptions options) {
 		this(dashScopeApi,metadataMode,options,RetryUtils.DEFAULT_RETRY_TEMPLATE);
 	}
-	
+
+	/**
+	 * 使用自定义选项和重试策略构造嵌入模型。
+	 *
+	 * @param dashScopeApi DashScope API 客户端
+	 * @param metadataMode 元数据模式
+	 * @param options 嵌入选项
+	 * @param retryTemplate 重试模板
+	 */
 	public DashScopeEmbeddingModel(DashScopeApi dashScopeApi,MetadataMode metadataMode,DashScopeEmbeddingOptions options,
 			RetryTemplate retryTemplate) {
 		this(dashScopeApi,metadataMode,options,retryTemplate,ObservationRegistry.NOOP);
 	}
 	
+	/**
+	 * 使用完整参数构造嵌入模型。
+	 *
+	 * @param dashScopeApi DashScope API 客户端
+	 * @param metadataMode 元数据模式
+	 * @param options 嵌入选项
+	 * @param retryTemplate 重试模板
+	 * @param observationRegistry 观测注册表
+	 */
 	public DashScopeEmbeddingModel(DashScopeApi dashScopeApi,MetadataMode metadataMode,DashScopeEmbeddingOptions options,
 			RetryTemplate retryTemplate,ObservationRegistry observationRegistry) {
 		Assert.notNull(dashScopeApi, "dashScopeApi must not be null");
@@ -74,7 +131,7 @@ public class DashScopeEmbeddingModel extends AbstractEmbeddingModel{
 		Assert.notNull(options, "options must not be null");
 		Assert.notNull(retryTemplate, "retryTemplate must not be null");
 		Assert.notNull(observationRegistry, "observationRegistry must not be null");
-		
+
 		this.dashScopeApi = dashScopeApi;
 		this.metadataMode = metadataMode;
 		this.defaultOptions = options;
