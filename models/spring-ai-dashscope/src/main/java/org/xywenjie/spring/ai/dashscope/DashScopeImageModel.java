@@ -19,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
+import org.xywenjie.spring.ai.dashscope.api.DashScopeApi;
 import org.xywenjie.spring.ai.dashscope.api.DashScopeImageApi;
 import org.xywenjie.spring.ai.dashscope.api.dto.DashScopeRequest;
 import org.xywenjie.spring.ai.dashscope.api.dto.DashScopeResponse;
@@ -298,5 +299,50 @@ public class DashScopeImageModel implements ImageModel {
         Optional.ofNullable(out.getCode()).ifPresent(code -> imageResponseMetadata.put("code",code));
         Optional.ofNullable(out.getMessage()).ifPresent(msg -> imageResponseMetadata.put("message",msg));
         return imageResponseMetadata;
+    }
+
+    public static Builder builder(){
+        return new Builder();
+    }
+
+    public static final class Builder{
+
+        private DashScopeImageApi dashScopeImageApi;
+
+        private DashScopeImageOptions defaultOptions;
+
+        private RetryTemplate retryTemplat = RetryUtils.DEFAULT_RETRY_TEMPLATE;
+
+        private ObservationRegistry observationRegistry;
+
+        private TaskPersistentService persistentService;
+
+        public Builder dashScopeImageApi(DashScopeImageApi dashScopeImageApi){
+            this.dashScopeImageApi = dashScopeImageApi;
+            return this;
+        }
+
+        public Builder defaultOptions(DashScopeImageOptions defaultOptions){
+            this.defaultOptions = defaultOptions;
+            return this;
+        }
+
+        public Builder retryTemplate(RetryTemplate retryTemplate){
+            this.retryTemplat = retryTemplate;
+            return this;
+        }
+
+        public Builder observationRegistry(ObservationRegistry observationRegistry){
+            this.observationRegistry = observationRegistry;
+            return this;
+        }
+        
+        public Builder persistentService(TaskPersistentService persistentService){
+            this.persistentService = persistentService;
+            return this;
+        }
+        public DashScopeImageModel build(){
+            return new DashScopeImageModel(this.dashScopeImageApi,this.defaultOptions,this.retryTemplat,this.observationRegistry,this.persistentService);
+        }
     }
 }

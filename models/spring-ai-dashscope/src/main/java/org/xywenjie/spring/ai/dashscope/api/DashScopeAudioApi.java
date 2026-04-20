@@ -1,9 +1,5 @@
 package org.xywenjie.spring.ai.dashscope.api;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.slf4j.Logger;
@@ -26,7 +22,6 @@ import org.xywenjie.spring.ai.dashscope.api.dto.DashScopeResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.Map;
 import java.util.function.Consumer;
 
 /**

@@ -43,7 +43,15 @@ public class DashScopeDefinition {
 	}
 	
 	public enum VideoModel {
-		
+		WAN2_7("wan2.7");
+		private final String value;
+		VideoModel(String value){
+			this.value = value;
+		}
+
+		public String getValue() {
+			return value;
+		}
 	}
 
 	public enum Role{
